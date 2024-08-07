@@ -1,0 +1,389 @@
+#################################################################################
+# FUNCTIONS OF INTEFEROGRAM ANALYSIS V.3.X.X
+################################################################################
+# Authors: Jhonatha Ricardo dos Santos, Armando Zuffi, Ricardo Edgul Samad, Nilson Dias Vieira Junior
+# Python 3.11
+# Last update: 2024_08_06
+
+import PySimpleGUI as sg
+import os
+import io
+
+import numpy as np
+import shutil
+
+from io import BytesIO
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from scipy.ndimage import rotate
+from scipy.signal import peak_widths, find_peaks
+from scipy import sparse
+from scipy.sparse.linalg import spsolve
+from scipy.optimize import curve_fit
+from PIL import Image, ImageDraw
+
+
+# GET BINARY DATA
+def getBinaryData(filename):
+    '''
+    path file name to binary value
+    :param filename: path of file
+    :return: binary value
+    '''
+    binary_values = []
+    with open(filename, 'rb') as f:
+        data = f.read(1)
+        while data != b'':
+            binary_values.append(ord(data))
+            data = f.read(1)
+        return binary_values
+
+# DRAW FIGURE FROM FILES
+def draw_figure(canvas, figure):
+    '''
+    Drawing rectangle figure on canvas
+    :param canvas: image canvas
+    :param figure: original interferogram
+    :return: rectangle drawn on figure
+    '''
+    figure_canvas_agg = FigureCanvasTkAgg(figure, canvas)
+    figure_canvas_agg.draw()
+    figure_canvas_agg.get_tk_widget().pack(side='top', fill='both', expand=1)
+    return figure_canvas_agg
+
+# GET VALUES FROM INPUTBOX
+def get_value(key, values):
+    '''
+    convert string labels to float values.
+    :param key: labels
+    :param values: labels value
+    :return: float of label values
+    '''
+    value = values[key]
+    return float(value)
+
+# GET IMAGE FILE FROM PATH FILE
+def image_to_data(im):
+    '''
+    convert image to data image
+    :param im: image
+    :return: data of image
+    '''
+    with BytesIO() as output:
+        im.save(output, format="PNG")
+        data = output.getvalue()
+    return data
+
+# DRAW RECTANGLE ON INTERFEROMETER FIGURE
+def apply_drawing(values, window, tmp_file, size):
+    '''
+    :param values: x and y labels of rectangle
+    :param window: main window
+    :return: rectangle drown on temp image file
+    '''
+    image_file = values["file1"]
+    begin_x = get_value("-BEGIN_X-", values)
+    begin_y = get_value("-BEGIN_Y-", values)
+    end_x = get_value("-END_X-", values)
+    end_y = get_value("-END_Y-", values)
+    rotate_degree = get_value("-DEGREE-", values)
+
+    if begin_x > end_x:
+        begin_x = get_value("-END_X-", values)
+        end_x = get_value("-BEGIN_X-", values)
+    if begin_y > end_y:
+        begin_y = get_value("-END_Y-", values)
+        end_y = get_value("-BEGIN_Y-", values)
+
+    if os.path.exists(image_file):
+        shutil.copy(image_file, tmp_file)
+        imagetmp = Image.open(tmp_file)
+        imagetmp = imagetmp.resize(size)
+        imagetmp = imagetmp.rotate(rotate_degree, resample=Image.Resampling.BICUBIC)
+        draw = ImageDraw.Draw(imagetmp)
+        draw.rectangle((begin_x, begin_y, end_x, end_y), width=2, outline='white')  ##DCDCDC
+        imagetmp.save(tmp_file)
+        bio = io.BytesIO()
+        imagetmp.save(bio, format='PNG')
+        window["image1"].update(data=bio.getvalue(), size=size)
+
+def rotate_img(values, window):
+    '''
+    :param values: x and y labels of rectangle
+    :param window: main window
+    :return: rectangle drown on temp image file
+    '''
+    image_file = values["file1"]
+    rotate_degree = get_value("-DEGREE-", values)
+
+    if os.path.exists(image_file):
+        shutil.copy(image_file, tmp_file)
+        imagetmp = Image.open(tmp_file)
+        imagetmp = imagetmp.resize(size)
+        imagetmp = imagetmp.rotate(rotate_degree, resample=Image.Resampling.BICUBIC)
+        imagetmp.save(tmp_file)
+        bio = io.BytesIO()
+        imagetmp.save(bio, format='PNG')
+        window["image1"].update(data=bio.getvalue(), size=size)
+
+# CREATING MEAN MAPS/ARRAY AND STD ARRAY
+def mean_maps(data):
+    '''
+    2D Array mean
+    :param n: group of 2D arrays
+    :return: 2D array
+    '''
+    mean_data = data[0] / len(data)
+    for i in range(1, len(data)):
+        mean_data = mean_data + data[i] / len(data)
+    return mean_data
+
+def std_maps(data, mean_data):
+    '''
+    standard deviation of 2D Array maps
+    :param n: group of 2D arrays and mean 2D array
+    :return: std of 2D array
+    '''
+    desv = (data[0] - mean_data) * (data[0] - mean_data)
+    for i in range(1, len(data)):
+        desv = desv + (data[i] - mean_data) * (data[i] - mean_data)
+
+    return np.sqrt(desv / len(data))
+
+# CREATING FRINGES WIDTHS
+def fringes_width(data, fang_deg):
+    '''
+    Calculate 2D array shifts and widths fringes distribution
+    :param n: 2D array, 2D array of ref. image.
+    :return: mean fringe width
+    '''
+    data1 = rotate(data, 90 - fang_deg, reshape = True)
+    nl, nr = np.shape(data1)
+    f_width = np.zeros(np.shape(data1))
+    for l in range(0, nl):
+        line1 = (data1[l, :])
+        try:
+            ypeaks1, _ = find_peaks(line1, height=0.5 * np.max(line1), width=1)
+
+            x0 = np.arange(ypeaks1[0], ypeaks1[-1], 1)
+            y0 = np.interp(x0, ypeaks1[0:-1], np.diff(ypeaks1))
+
+            xl = np.arange(0, ypeaks1[0], 1)
+            yl = np.zeros((np.shape(xl)))
+
+            xr = np.arange(ypeaks1[-1], nr, 1)
+            yr = np.zeros((np.shape(xr)))
+
+            x = np.hstack((xl, x0, xr))
+            y = np.hstack((yl, y0, yr))
+
+            x_interp = np.linspace(0, nr, nr)
+            f_width[l, :] = np.interp(x_interp, x, y)
+        except:
+            f_width[l, :] = np.zeros(np.shape(line1))
+    result = rotate(data, -(90 - fang_deg), reshape = True)
+    return result, np.std(f_width)
+
+def baseline2D_gas(data, base_ref):
+    '''
+    path file name to binary value
+    :param 2D array and base ref (%)
+    :return: 2D array BG map and 2D array std of BG map
+    '''
+    data_sort = np.sort(data.flatten())
+    bg_map = np.mean(data_sort[0:int(len(data_sort)* base_ref)]) * np.ones(np.shape(data))
+    bg_std = np.std(data_sort[0:int(len(data_sort)* base_ref)]) * np.ones(np.shape(data))
+
+    return bg_map, bg_std
+
+def baseline2D_plasma(data, base_ref):
+    nlines, nrows = np.shape(data)
+    X = np.arange(0, nrows, 1)
+    Y = np.arange(0, nlines, 1)
+    XY = np.meshgrid(X, Y)
+
+    # creating vector from data
+    dataxyz = []
+    for i in range(0, nrows):
+        for j in range(0, nlines):
+            if (i <= int(nrows * base_ref) or i >= int(nrows - nrows * base_ref)) or (
+                j <= int(nlines * base_ref) or j >= int(nlines - nlines * base_ref)):
+                dataxyz.append([i, j, data[j, i]])
+
+    # extracting x, y and z info
+    xy, z = [], []
+    for i in range(0, np.shape(dataxyz)[0]):
+        xy.append(dataxyz[i][0:2])
+        z.append(dataxyz[i][2])
+
+    z = np.transpose(z)
+    xy = np.transpose(xy)
+
+    popt, pcov = curve_fit(func_baseline2D, xy, z)
+
+    base_map = func_baseline2D(XY, *popt)
+    std_bmap = func_baseline2D(XY, *(np.diag(pcov)))
+
+    return base_map, np.abs(std_bmap)
+
+def func_baseline2D(xy, A, B, C, E, F, G, H, I, J, K, L):
+    y = np.asfarray(xy[1])
+    x = np.asfarray(xy[0])
+    p_func = A + B * x * y + C * x + E * x ** 2 + F * y ** 2 + G * x ** 3 + H * y ** 3 + I * x ** 4 + J * y ** 4 + K * x ** 5 + L * y ** 5
+    return p_func
+
+def func_gfilter(data, centerfh, centerfv, f_range, sigma_gfilter):
+    '''
+    2D gaussian filter
+    :param 2D array, filter position, filter range and sigma of Gfilter
+    :return: 2D arrayfilter and sigma of Gfilter
+    '''
+    gfilterv = np.zeros(np.shape(data))
+    gfilterh = np.zeros(np.shape(data))
+    nl, nr = np.shape(data)
+    X = np.arange(0, nr, 1)
+    Y = np.arange(0, nl, 1)
+    # Creating Filter for Horizontal/vertical fringes orientation
+    if sigma_gfilter == 0:
+        # sigma filter is a func of image dimensions and f_rqnge
+        sigma_gfilter = (2 * f_range)
+    for i in X:
+        gfilterh[:, i] = np.exp(-np.square(Y - centerfh) / (2 * np.square(sigma_gfilter)))
+    for i in Y:
+        gfilterv[i, :] = np.exp(-np.square(X - centerfv) / (2 * np.square(sigma_gfilter)))
+
+    if centerfh == 0:
+        gfilter = gfilterv
+
+    elif centerfv == 0:
+        gfilter = gfilterh
+
+    else:
+        gfilter = gfilterv * gfilterh
+
+    return gfilter, sigma_gfilter
+
+#Function to detect fringes orientation
+def func_cfilter(data, centerfh, centerfv, tgttype):
+    if tgttype == 'Gas/Vapor':
+        tgtcode = 0
+    elif tgttype == 'Plasma':
+        tgtcode = -1
+
+    nl, nr = np.shape(data)
+    summapv1 = np.sum(data[:int(nr / 2), :], axis=0) - als(np.sum(data[:int(nr / 2), :], axis=0))
+    summapv2 = np.sum(data[int(nr / 2):, :], axis=0) - als(np.sum(data[int(nr / 2):, :], axis=0))
+
+    summapv = summapv1 + summapv2 - als(summapv1 + summapv2)
+    summaph = np.sum(data, axis=1) - als(np.sum(data, axis=1))
+
+    if centerfv == 0:
+        try:
+            fpv = find_peaks(summapv, height=0.3 * np.max(summapv), width=1)[0]
+            # fwhm of peaks for sigma of gaussian filter
+            pwv = (peak_widths(summapv, fpv, rel_height=0.5)[0])
+
+        except:
+            fpv = np.array([])
+            pwv = np.array([0])
+    else:
+        fpv = np.array([centerfv])
+        pwv = np.array([2])
+
+    if centerfh == 0:
+        try:
+            fph = find_peaks(summaph, height=0.3 * np.max(summaph), width=1)[0]
+            # Range of gaussian filter
+            pwh = (peak_widths(summaph, fph, rel_height=0.5)[0])
+
+        except:
+            fph = np.array([])
+            pwh = np.array([0])
+    else:
+        fph = np.array([centerfh])
+        pwh = np.array([2])
+
+    if len(fph) == 0 and len(fpv) == 0:
+        sg.popup(f"WARNING: Unable to apply the Fast Fourier Transform to the selected image!")
+        centerfh = centerfv = 0
+        fh_range = fv_range = 0
+        fang_rad = 0
+
+    elif len(fph) != 0 and len(fpv) != 0:
+        while len(fpv) < len(fph):
+            if len(fph) % 2 == 0: fph = fph[0:-1]
+            else: fph = fph[0:]
+        while len(fpv) > len(fph):
+            if len(fpv) % 2 == 0: fpv = fpv[0:-1]
+            else: fpv = fpv[0:]
+
+    if len(fph) == 0 and len(fpv) != 0:
+        centerfh = 0
+        fh_range = 0
+        centerfv = fpv[tgtcode]
+        fv_range = 2 * int(pwv[tgtcode])
+        fang_rad = np.pi / 2
+
+    elif len(fpv) == 0 and len(fph) != 0:
+        centerfv = 0
+        fv_range = 0
+        centerfh = fph[tgtcode]
+        fh_range = 2 * int(pwh[tgtcode])
+        fang_rad = 0
+
+    elif len(fpv) == len(fph) and len(fpv)!=0:
+        # verify quadrant of center filter
+        if summapv1[fpv[0]] > summapv2[fpv[0]]:
+            deltah = fph[:int(len(fph) / 2)]
+            centerfh = fph[0]
+            fh_range = 2 * int(pwh[0])
+            deltav = fpv[:int(len(fpv) / 2)]
+            centerfv = fpv[0]
+            fv_range = 2 * int(pwv[0])
+        else:
+            deltah = -fph[:int(len(fph) / 2)]
+            centerfh = fph[0]
+            fh_range = 2 * int(pwh[0])
+            deltav = fpv[:int(len(fpv) / 2)]
+            centerfv = fpv[-1]
+            fv_range = 2 * int(pwv[-1])
+        try:
+            fang_rad = np.arctan2(deltav, deltah)[0]
+        except:
+            fang_rad = 0
+
+    fang_deg = (fang_rad) * 180 / np.pi
+
+    return summaph, fph, summapv, fpv, centerfh, fh_range, centerfv, fv_range, fang_deg
+
+def als(data, lam=5e2, p=0.1, itermax=10):
+    r"""
+    Implements an Asymmetric Least Squares Smoothing
+    baseline correction algorithm (P. Eilers, H. Boelens 2005)
+    Inputs:
+        y:
+            input data (i.e. chromatogram of spectrum)
+        lam:
+            parameter that can be adjusted by user. The larger lambda is,
+            the smoother the resulting background, z
+        p:
+            wheighting deviations. 0.5 = symmetric, <0.5: negative
+            deviations are stronger suppressed
+        itermax:
+            number of iterations to perform
+    Output:
+        the fitted background vector
+
+    """
+    L = len(data)
+#  D = sparse.csc_matrix(np.diff(np.eye(L), 2))
+    D = sparse.eye(L, format='csc')
+    D = D[1:] - D[:-1]  # numpy.diff( ,2) does not work with sparse matrix. This is a workaround.
+    D = D[1:] - D[:-1]
+    D = D.T
+    w = np.ones(L)
+    for i in range(itermax):
+        W = sparse.diags(w, 0, shape=(L, L))
+        Z = W + lam * D.dot(D.T)
+        z = spsolve(Z, w * data)
+        w = p * (data > z) + (1 - p) * (data < z)
+    return z
