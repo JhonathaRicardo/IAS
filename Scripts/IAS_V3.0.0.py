@@ -1,7 +1,7 @@
 # Software: Interferometry Analysis - Gas Jet - ARMANDO'S BETA(Version 3.0.1)
 # Authors: Jhonatha Ricardo dos Santos, Armando Zuffi, Ricardo Edgul Samad, Nilson Dias Vieira Junior
 # Python 3.11
-# Last update: 2024_08_07
+# Last update: 2024_08_08
 
 # LYBRARIES
 # The Python Standard Library
@@ -11,7 +11,7 @@
 # Scipy from scipy.org
 # Scikit-image from  https://doi.org/10.7717/peerj.453
 # Pillow (PIL Fork) 9.3.0 from pypi.org/project/Pillow
-from Func_IntAnalysis_V3 import *
+from IASFunctions_V3 import *
 import abel
 import PySimpleGUI as sg
 import os
@@ -31,16 +31,21 @@ from PIL import Image, UnidentifiedImageError
 from skimage.restoration import unwrap_phase
 from skimage.registration import phase_cross_correlation
 #
-NameVersion = "Interferogram Analysis (Version 3.0.1)"
+NameVersion = "Interferometry Analysis Software (Version 3.0.0)"
 #
 # Matplotlib Tk style
 matplotlib.use('TkAgg')
 warnings.filterwarnings("ignore")
 #Colormaps
 custom1_cmap = LinearSegmentedColormap.from_list('default', [(0,    'white'),(0.25, 'blue'), (0.40, 'green'),
-                                              (0.55, 'lime'), (0.70, 'yellow'), (0.85, 'orange'), (1, 'red')], N=256)
+                                              (0.55, 'lime'), (0.70, 'yellow'), (0.85, 'orange'), (1, 'red')], N=512)
 
 matplotlib.colormaps.register(cmap=custom1_cmap)
+
+custom2_cmap = LinearSegmentedColormap.from_list('default_r', [(0,    'red'),(0.25, 'orange'), (0.40, 'yellow'),
+                                              (0.55, 'lime'), (0.70, 'green'), (0.85, 'blue'), (1, 'white')], N=512)
+
+matplotlib.colormaps.register(cmap=custom2_cmap)
 
 # Font and theme of PysimpleGUI
 AppFont = 'Arial 16 bold'
@@ -80,6 +85,9 @@ base_ref = '5'
 # Image parameters
 h_prof = -1.0  # heigth null
 rotate_degree = 0.0  # angle to image rotation
+#FFT Freq
+fpv = np.array([0, 0])
+fph = np.array([0, 0])
 # Initial values to cut image
 begin_x = '100'
 begin_y = '100'
@@ -90,7 +98,7 @@ pos1 = '10'
 pos2 = '20'
 pos3 = '30'
 #colormap
-newcmp = 'rainbow_r'
+cmapIAS = ['default','default_r', 'rainbow', 'rainbow_r', 'gist_rainbow', 'gist_rainbow_r', 'jet', 'jet_r']
 # Images Dimensions
 width, height = size = 428, 342  # Scale image - interferogram
 width2, height2 = size2 = 214, 172  # Scale image - Ref
@@ -162,26 +170,32 @@ layout_input_parameters = [
               key='framegas',vertical_alignment="left", font='Arial 10 bold')],
 
 ]
+# FREQ. FRAMES
+layout_frame_freq = [
+    [sg.Text('Vert. vy (pixel):'), sg.Checkbox('-vy       ', default=False, key='-oppositevy-',enable_events=True),
+     sg.Spin([i for i in range(minvalue_y, maxvalue_y + 1)], initial_value=0, size=(5, 1), key='-centerfv-',
+             enable_events=True) ],
+    [sg.Text('Hor. vx (pixel): '), sg.Checkbox('-vx       ', default=False, key='-oppositevx-',enable_events=True),
+     sg.Spin([i for i in range(minvalue_x, maxvalue_x + 1)], initial_value=0, size=(5, 1), key='-centerfh-',
+             enable_events=True) ],
+    [sg.Text('Filter Range  Δv (pixel):        '),
+     sg.Spin([i for i in range(0, maxvalue_x // 2)], initial_value=0, size=(5, 1), key='-sigma_gfilter-',
+             enable_events=True)]
+    ]
 # LAYOUT INPUT MEASUREMENT PARAMETERS
 layout_analysis_parameters = [
-    [sg.Text('Vertical Freq. vy (pixel):           '),
-     sg.Spin([i for i in range(minvalue_y, maxvalue_y + 1)], initial_value=0, size=(5, 1), key='-centerfv-',
-             enable_events=True)],
-    [sg.Text('Horizontal Freq. vx (pixel):        '),
-     sg.Spin([i for i in range(minvalue_x, maxvalue_x + 1)], initial_value=0, size=(5, 1), key='-centerfh-',
-             enable_events=True)],
-    [sg.Text('Filter Range  Δv (pixel):            '),
-     sg.Spin([i for i in range(0, maxvalue_x // 2)], initial_value=0, size=(5, 1), key='-sigma_gfilter-',
-             enable_events=True)],
+    [sg.Frame('FFT Freq.', layout_frame_freq, size=(260, 110), title_location=sg.TITLE_LOCATION_TOP_LEFT,
+              key='framesteps', font='Arial 10 bold')],
+
+
     [sg.Text('Gaussian Blur σ (pixel):           '),
      sg.Spin([i for i in range(0, maxvalue_x // 2)], initial_value=sigma_gblur, size=(5, 1), key='-sigma_gblur-',
              enable_events=True)],
-    [sg.Text('')],
     [sg.Text('Axisymmetric Orientation:'),
-     sg.Combo(['vertical', 'horizontal','none'], default_value='vertical', enable_events = True, key='-comboaxisymm-')],
+     sg.Combo(['Vertical', 'None(Vert.)', 'Horizontal','None(Hor.)'], default_value='Vertical', enable_events = True, key='-comboaxisymm-')],
     [sg.Text('Axisymetric Position (pixel):     ', key = '-text_axissymm-'),
      sg.Spin([i for i in range(minvalue_x, maxvalue_x + 1)], initial_value=0, size=(5, 1), key='-axisymm_pos-',
-             enable_events=True)],
+             enable_events=True)]
 ]
 # LAYOUT FRAME OF ALL INPUT OPTIONS
 layout_frame_Options = [
@@ -210,7 +224,7 @@ layout_frame_ImagesR = [
 layout_frame_Images = [
     [sg.Column(layout_frame_ImagesL, element_justification='c'),
      sg.Column(layout_frame_ImagesR, element_justification='c')],
-    [sg.Frame("Options", layout_frame_Options, size=(698, 260), title_location=sg.TITLE_LOCATION_TOP_LEFT,
+    [sg.Frame("Options", layout_frame_Options, size=(698, 270), title_location=sg.TITLE_LOCATION_TOP_LEFT,
               font='Arial 12 bold')],
 ]
 # LAYOUT 1D OPTIONS PLOT
@@ -244,7 +258,7 @@ layout_frame_Result = [
     [sg.Button('Save Plot', size=(16, 2), disabled=True, font='Arial 10 bold'),
      sg.Button('Save Data', size=(16, 2), disabled=True, font='Arial 10 bold'),
      sg.Text('Colormap :'),
-     sg.Combo(['default', 'rainbow', 'plasma', 'viridis'], default_value='default', key='-cmapcombo-',
+     sg.Combo(cmapIAS, default_value='default', key='-cmapcombo-',
               enable_events=True)],
     [sg.Frame('1D Profile (Axisymmetry)', layout_frame_plot1D, size=(490, 100),
               title_location=sg.TITLE_LOCATION_TOP_LEFT,
@@ -291,11 +305,28 @@ while True:
     if event == '-combotype-':
         if values['-combotype-'] == 'Plasma':
             window['framegas'].update(visible=False)
-            window['-comboaxisymm-'].update('horizontal')
+            window['-comboaxisymm-'].update('Horizontal')
+            window['-oppositevx-'].update(True)
+            window['-oppositevy-'].update(True)
 
         if values['-combotype-'] == 'Gas/Vapor':
             window['framegas'].update(visible=True)
-            window['-comboaxisymm-'].update('vertical')
+            window['-comboaxisymm-'].update('Vertical')
+            window['-oppositevx-'].update(False)
+            window['-oppositevy-'].update(False)
+    #######################################################################
+    # FFT FREQUENCY
+    if event == '-oppositevx-' or event == '-oppositevy-':
+        if values['-oppositevx-'] == True:
+             window['-centerfh-'].update(str(fph[-1]))
+        else:
+             window['-centerfh-'].update(str(fph[0]))
+
+        if values['-oppositevy-'] == True:
+             window['-centerfv-'].update(str(fpv[-1]))
+        else:
+             window['-centerfv-'].update(str(fpv[0]))
+
     #######################################################################
     # CLEAR SCREEN INFO
     if event == 'Clear':
@@ -315,6 +346,8 @@ while True:
         window['Rotate (°)'].update(disabled=True)
         window['-DEGREE-'].update(visible=True)
         window['Analyse Data'].update(disabled=True)
+        window['-oppositevx-'].update(False)
+        window['-oppositevy-'].update(False)
 
         # Reset values
         path1 = ''
@@ -327,6 +360,7 @@ while True:
         window['-centerfv-'].update('0')
         window['-sigma_gfilter-'].update('0')
         window['-axisymm_pos-'].update('0')
+
         # Cleaning plots
         try:
             fig_canvas_agg.get_tk_widget().forget()
@@ -356,7 +390,7 @@ while True:
     ########################################################################
     # SYMMETRIC OR ASSYMETRIC TARGET ANALYSIS
     if event == '-comboaxisymm-':
-        if values['-comboaxisymm-'] == 'none':
+        if values['-comboaxisymm-'] == 'None(Hor.)' or values['-comboaxisymm-'] == 'None(Vert.)':
             window['-text_axissymm-'].update('Target Thickness (µm):            ')
             window['abelradio'].update(disabled=True)
         else:
@@ -592,6 +626,7 @@ while True:
             # Wavelength laser
             lambda0 = float(get_value('-lambda0-', values)) * 1e-9  # in meters
             unc_lambda0 = float(get_value('-unclambda0-', values)) * 0.588705 * 1e-9  # sigma in meters
+
             # color map
             newcmp = cm.get_cmap(values['-cmapcombo-'], 256)
 
@@ -600,7 +635,7 @@ while True:
             const_gas = 3 / (4 * np.pi * alpha_gas)
 
             # Manual axisymm position
-            if values['-comboaxisymm-'] == 'none':
+            if values['-comboaxisymm-'] == 'None(Hor.)' or values['-comboaxisymm-'] == 'None(Vert.)':
                 axis_pos = 0
                 thick_tgt =  float(get_value('-axisymm_pos-', values))*1e-6/factor
                 std_thick_tgt = thick_tgt/factor*unc_factor
@@ -664,7 +699,6 @@ while True:
                 fftmap = np.zeros(np.shape(intref))
                 nlmap, nrmap = np.shape(fftmap)
 
-            rotate_degree = 0
             '''
             # Authomatic definition of the gaussian filter position: 
             this position are defined like the line or column (Vertical or horizontal fringes) with more intensity pixel
@@ -675,8 +709,9 @@ while True:
             '''
             fftmap = (fftmap - np.min(fftmap)) * np.ones(np.shape(fftmap)) / (np.max(fftmap) - np.min(fftmap))
 
-            summaph,fph, summapv, fpv, centerfh, fh_range, centerfv, fv_range, fang_deg = func_cfilter(fftmap, centerfh, centerfv,values['-combotype-'])
-            f_range = np.max((fh_range, fv_range))
+            summaph,fph, summapv, fpv, centerfh, centerfv, f_range, fang_deg =\
+                func_cfilter(fftmap, centerfh,centerfv, values['-oppositevx-'], values['-oppositevy-'])
+
 
             window['-centerfh-'].update(str(centerfh))
             window['-centerfv-'].update(str(centerfv))
@@ -716,8 +751,6 @@ while True:
             # Intendity Distribution for std of phase
             distI1, std_I1 = baseline2D_gas(np.asfarray(intref), base_ref)
             distI2, std_I2 = baseline2D_gas(np.asfarray(inttgt), base_ref)
-            #distI1 = np.asfarray(intref)
-            #distI2 = np.asfarray(inttgt)
 
             func_distI = np.sqrt((np.mean(distI1) * (distI1 + distI2)) / (2 * distI1 * distI2))
 
@@ -728,8 +761,19 @@ while True:
             except:
                 std_phasemap_i = np.zeros(np.shape(intref))
 
+            '''
+            ################################################################################
+            Applying Inverse Abel Transform (IAT):
+            The IAT is applied using Dash Onion Peeling algorithm from PyAbel. To apply its library correctly is necessary
+            to define a axis symmetric in image (Horizontal or Vertical) and it is defined from more intensity pixel range. 
+            So, the image is cut according axissymetric.
+            NOTE: the Abel transform is always performed around the vertical axis, so when the image have horizontal
+            axissymmetry the matrix must be transposed.
+
+            '''
+
             # Transpose Matrix for Horizontal Axissmetry
-            if values['-comboaxisymm-'] == 'horizontal':
+            if values['-comboaxisymm-'] == 'Horizontal':
                 uwphasemap = np.transpose(uwphasemap)
                 std_phasemap_i = np.transpose(std_phasemap_i)
 
@@ -741,13 +785,8 @@ while True:
                 # Verify Baseline upper to phase
                 baselinemap, std_blmap = baseline2D_gas(uwphasemap, base_ref)
 
-                resultphase = (uwphasemap - baselinemap) - np.min(uwphasemap - baselinemap) * np.ones(
-                    np.shape(uwphasemap))
-
-                # Verify Baseline upper to phase
-                index_max = np.unravel_index(np.argmax(resultphase), np.shape(resultphase))
-                if resultphase[index_max] < 0:
-                    resultphase = (-1) * resultphase
+                resultphase = (uwphasemap - baselinemap) - np.min(uwphasemap - baselinemap) \
+                              * np.ones(np.shape(uwphasemap))
 
             if values['-combotype-'] == 'Plasma':
                 baselinemap, std_blmap = baseline2D_plasma(uwphasemap, base_ref)
@@ -755,7 +794,7 @@ while True:
                 resultphase = (uwphasemap - baselinemap) - np.min(uwphasemap - baselinemap) * np.ones(np.shape(uwphasemap))
 
                 # Verify Baseline upper to phase
-                index_max = np.unravel_index(np.argmax(resultphase), np.shape(resultphase))
+                index_max = np.unravel_index(np.argmax(np.abs(resultphase)), np.shape(resultphase))
                 if resultphase[index_max] > 0:
                     resultphase = (-1) * resultphase
 
@@ -774,9 +813,10 @@ while True:
             np.savetxt('phasemap-bg pos00.dat', resultphase, fmt='%.3e')
             ##################################################################################################
             '''
-
+            #######################################################################################################
+            # PHASEMAP E STD PHASEMAP
             # First contribution: Experimental + baseline
-            #std_phasemap_i = np.sqrt(np.square(std_blmap * np.ones(np.shape(uwphasemap))) + np.square(std_phasemap_i))
+            std_phasemap_i = np.sqrt(np.square(std_blmap * np.ones(np.shape(uwphasemap))) + np.square(std_phasemap_i))
 
             # Apply gaussian blur
             phasemap_corr = (gaussian_filter(resultphase, sigma=sigma_gblur))
@@ -801,7 +841,7 @@ while True:
             ########################################################################################
             # ASYMMETRICAL TARGET
             ########################################################################################
-            if values['-comboaxisymm-'] == 'none':
+            if values['-comboaxisymm-'] == 'None(Hor.)' or values['-comboaxisymm-'] == 'None(Vert.)':
 
                 phasemap_symm = np.zeros(np.shape(uwphasemap))
                 std_phasemap_symm = np.zeros(np.shape(uwphasemap))
@@ -982,7 +1022,7 @@ while True:
             #######################################################################################
             #MATRIX RESULTS
             #Transpose Matrix with horizontal symmetry
-            if values['-comboaxisymm-'] == 'horizontal':
+            if values['-comboaxisymm-'] == 'Horizontal':
                 phasemap_corr = np.transpose(phasemap_corr)
                 phase_abel = np.transpose(phase_abel)
                 std_abelmap_2 = np.transpose(std_abelmap_2)
@@ -1117,9 +1157,9 @@ while True:
         # 1D PLOTS
         rangeh, rangev = np.shape(matrix_plot)
         # Ajust slider for horizontal/vertical
-        if values['-comboaxisymm-'] == 'vertical':
+        if values['-comboaxisymm-'] == 'Vertical' or values['-comboaxisymm-'] == 'None(Vert.)':
             window['sliderh'].update(range=(0, rangeh - 1), value=int(rangeh - indmax[0]))
-        elif values['-comboaxisymm-'] == 'horizontal':
+        elif values['-comboaxisymm-'] == 'Horizontal' or values['-comboaxisymm-'] == 'None(Hor.)':
             window['sliderh'].update(range=(0, rangev - 1), value=indmax[1])
 
         # Creating plot figure parameters
@@ -1154,9 +1194,9 @@ while True:
                 cb1.set_label(label='$\Delta\phi\hspace{.5} (rad)$', size=12, weight='bold')
             else:
                 cb1.set_label(label='$\sigma_{\Delta\phi}\hspace{.5} (rad)$', size=12, weight='bold')
-            if values['-comboaxisymm-'] == 'horizontal':
+            if values['-comboaxisymm-'] == 'Horizontal':
                 ax1.axhline(y=axis_pos * factor * 1e6, lw=1, ls='--', alpha=0.5, color='black')
-            else:
+            elif values['-comboaxisymm-'] == 'Vertical':
                 ax1.axvline(x=axis_pos * factor * 1e6, lw=1, ls='--', alpha=0.5, color='black')
 
         elif values['densradio'] == True:
@@ -1445,7 +1485,7 @@ while True:
             else:
 
                 # create r axis according to symmetry in micrometers (µm)
-                if values['-comboaxisymm-'] == 'vertical' or 'none':
+                if values['-comboaxisymm-'] == 'Vertical' or values['-comboaxisymm-'] == 'None(Vert.)':
                     raxis = np.arange(-rangev / 2, rangev / 2, 1)
                     raxis_um = raxis * factor * 1e6  # um
                     # set origin position (exit nozzle position) and slider position
@@ -1455,7 +1495,7 @@ while True:
                     array_plot = matrix_plot[pos]
                     array_std = matrix_plot_std[pos]
 
-                elif values['-comboaxisymm-'] == 'horizontal':
+                elif values['-comboaxisymm-'] == 'Horizontal' or values['-comboaxisymm-'] == 'None(Hor.)':
                     raxis = np.arange(-rangeh / 2, rangeh / 2, 1)
                     raxis_um = raxis * factor * 1e6  # um
                     # set origin position (exit nozzle position) and slider position
@@ -1515,36 +1555,35 @@ while True:
                     if values['-checkstd-'] == True:
                         ax1.errorbar(raxis_um, array_plot, yerr=array_std, label='$\sigma_{\Delta\phi}$', alpha=0.2,
                                      color="blue")
-                        ax1.set_ylim(bottom=0.)
 
                 # Including new 1D density profile for another height from origin height position
                 if values['-checkpos1-'] == True and values['-checkstd-'] == False:
                     h_prof1 = int(get_value('-pos1-', values))
                     pos1 = int(h_prof1 / (factor * 1e6))
-                    if values['-comboaxisymm-'] == 'vertical':
+                    if values['-comboaxisymm-'] == 'Vertical' or values['-comboaxisymm-'] == 'None(Vert.)':
                         ax1.plot(raxis_um, matrix_plot[pos_0 - pos1], label=labelplot % (h_prof1), lw=1,
                                  color="purple")
-                    elif values['-comboaxisymm-'] == 'horizontal':
+                    elif values['-comboaxisymm-'] == 'Horizontal' or values['-comboaxisymm-'] == 'None(Hor.)':
                         ax1.plot(raxis_um, matrix_plot[:, pos1], label=labelplot % (h_prof1), lw=1,
                                  color="purple")
 
                 if values['-checkpos2-'] == True and values['-checkstd-'] == False:
                     h_prof2 = int(get_value('-pos2-', values))
                     pos2 = int(h_prof2 / (factor * 1e6))
-                    if values['-comboaxisymm-'] == 'vertical':
+                    if values['-comboaxisymm-'] == 'Vertical' or values['-comboaxisymm-'] == 'None(Vert.)':
                         ax1.plot(raxis_um, matrix_plot[pos_0 - pos2], label=labelplot % (h_prof2), lw=1,
                                  color="red")
-                    elif values['-comboaxisymm-'] == 'horizontal':
+                    elif values['-comboaxisymm-'] == 'Horizontal' or values['-comboaxisymm-'] == 'None(Hor.)':
                         ax1.plot(raxis_um, matrix_plot[:, pos2], label=labelplot % h_prof2, lw=1,
                                  color="red")
 
                 if values['-checkpos3-'] == True and values['-checkstd-'] == False:
                     h_prof3 = int(get_value('-pos3-', values))
                     pos3 = int(h_prof3 / (factor * 1e6))
-                    if values['-comboaxisymm-'] == 'vertical':
+                    if values['-comboaxisymm-'] == 'Vertical' or values['-comboaxisymm-'] == 'None(Vert.)':
                         ax1.plot(raxis_um, matrix_plot[pos_0 - pos3], label=labelplot % (h_prof3), lw=1,
                                  color="orange")
-                    elif values['-comboaxisymm-'] == 'horizontal':
+                    elif values['-comboaxisymm-'] == 'Horizontal' or values['-comboaxisymm-'] == 'None(Hor.)':
                         ax1.plot(raxis_um, matrix_plot[:, pos3], label=labelplot % h_prof3, lw=1,
                                  color="orange")
                 ax1.legend()
@@ -1612,21 +1651,21 @@ while True:
                     # verify additional height positions 1, 2 and 3
                     else:
                         if values['-checkpos1-'] == True:
-                            if values['-comboaxisymm-'] == 'vertical':
+                            if values['-comboaxisymm-'] == 'Vertical' or values['-comboaxisymm-'] == 'None(Ver.)':
                                 list_data = np.vstack((list_data, matrix_plot[pos_0 - pos1]))
                             else:
                                 list_data = np.vstack((list_data, matrix_plot[:, pos1]))
                             file_data.write(',%.0f (µm)' % h_prof1)
 
                         if values['-checkpos2-'] == True:
-                            if values['-comboaxisymm-'] == 'vertical':
+                            if values['-comboaxisymm-'] == 'Vertical' or values['-comboaxisymm-'] == 'None(Ver.)':
                                 list_data = np.vstack((list_data, matrix_plot[pos_0 - pos2]))
                             else:
                                 list_data = np.vstack((list_data, matrix_plot[:, pos2]))
                             file_data.write(',%.0f (µm)' % h_prof2)
 
                         if values['-checkpos3-'] == True:
-                            if values['-comboaxisymm-'] == 'vertical':
+                            if values['-comboaxisymm-'] == 'Vertical' or values['-comboaxisymm-'] == 'None(Ver.)':
                                 list_data = np.vstack((list_data, matrix_plot[pos_0 - pos3]))
                             else:
                                 list_data = np.vstack((list_data, matrix_plot[:, pos3]))
