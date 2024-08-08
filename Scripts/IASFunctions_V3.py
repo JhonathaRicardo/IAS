@@ -3,7 +3,7 @@
 ################################################################################
 # Authors: Jhonatha Ricardo dos Santos, Armando Zuffi, Ricardo Edgul Samad, Nilson Dias Vieira Junior
 # Python 3.11
-# Last update: 2024_08_06
+# Last update: 2024_08_08
 
 import PySimpleGUI as sg
 import os
@@ -260,100 +260,61 @@ def func_gfilter(data, centerfh, centerfv, f_range, sigma_gfilter):
     else:
         gfilter = gfilterv * gfilterh
 
-    return gfilter, sigma_gfilter
+    return gfilter, int(sigma_gfilter)
 
 #Function to detect fringes orientation
-def func_cfilter(data, centerfh, centerfv, tgttype):
-    if tgttype == 'Gas/Vapor':
-        tgtcode = 0
-    elif tgttype == 'Plasma':
-        tgtcode = -1
+def func_cfilter(data, centerfh, centerfv, oppfx, oppfy):
+
+    if oppfx == False: fx = 0
+    else: fx = -1
+    if oppfy == False: fy = 0
+    else: fy = -1
 
     nl, nr = np.shape(data)
-    summapv1 = np.sum(data[:int(nr / 2), :], axis=0) - als(np.sum(data[:int(nr / 2), :], axis=0))
-    summapv2 = np.sum(data[int(nr / 2):, :], axis=0) - als(np.sum(data[int(nr / 2):, :], axis=0))
 
-    summapv = summapv1 + summapv2 - als(summapv1 + summapv2)
+    summapv = np.sum(data, axis=0) - als(np.sum(data, axis=0))
     summaph = np.sum(data, axis=1) - als(np.sum(data, axis=1))
 
-    if centerfv == 0:
-        try:
-            fpv = find_peaks(summapv, height=0.3 * np.max(summapv), width=1)[0]
-            # fwhm of peaks for sigma of gaussian filter
-            pwv = (peak_widths(summapv, fpv, rel_height=0.5)[0])
 
-        except:
-            fpv = np.array([])
-            pwv = np.array([0])
-    else:
-        fpv = np.array([centerfv])
-        pwv = np.array([2])
+    try:
+        fpv = find_peaks(summapv, height=0.5 * np.max(summapv), width=1)[0]
+        # fwhm of peaks for sigma of gaussian filter
+        pwv = (peak_widths(summapv, fpv, rel_height=0.5)[0])
+    except:
+        fpv = np.array([0,0])
+        pwv = np.array([0,0])
+    if len(fpv) == 0:
+        fpv = np.array([0, 0])
+        pwv = np.array([0, 0])
+
+    try:
+        fph = find_peaks(summaph, height=0.5 * np.max(summaph), width=1)[0]
+        # Range of gaussian filter
+        pwh = (peak_widths(summaph, fph, rel_height=0.5)[0])
+
+    except:
+        fph = np.array([0,0])
+        pwh = np.array([0,0])
+    if len(fph) == 0:
+        fph = np.array([0, 0])
+        pwh = np.array([0, 0])
 
     if centerfh == 0:
-        try:
-            fph = find_peaks(summaph, height=0.3 * np.max(summaph), width=1)[0]
-            # Range of gaussian filter
-            pwh = (peak_widths(summaph, fph, rel_height=0.5)[0])
+        centerfh = fph[fx]
+    if centerfv == 0:
+        centerfv = fpv[fy]
 
-        except:
-            fph = np.array([])
-            pwh = np.array([0])
-    else:
-        fph = np.array([centerfh])
-        pwh = np.array([2])
-
-    if len(fph) == 0 and len(fpv) == 0:
-        sg.popup(f"WARNING: Unable to apply the Fast Fourier Transform to the selected image!")
-        centerfh = centerfv = 0
-        fh_range = fv_range = 0
-        fang_rad = 0
-
-    elif len(fph) != 0 and len(fpv) != 0:
-        while len(fpv) < len(fph):
-            if len(fph) % 2 == 0: fph = fph[0:-1]
-            else: fph = fph[0:]
-        while len(fpv) > len(fph):
-            if len(fpv) % 2 == 0: fpv = fpv[0:-1]
-            else: fpv = fpv[0:]
-
-    if len(fph) == 0 and len(fpv) != 0:
-        centerfh = 0
-        fh_range = 0
-        centerfv = fpv[tgtcode]
-        fv_range = 2 * int(pwv[tgtcode])
-        fang_rad = np.pi / 2
-
-    elif len(fpv) == 0 and len(fph) != 0:
-        centerfv = 0
-        fv_range = 0
-        centerfh = fph[tgtcode]
-        fh_range = 2 * int(pwh[tgtcode])
-        fang_rad = 0
-
-    elif len(fpv) == len(fph) and len(fpv)!=0:
-        # verify quadrant of center filter
-        if summapv1[fpv[0]] > summapv2[fpv[0]]:
-            deltah = fph[:int(len(fph) / 2)]
-            centerfh = fph[0]
-            fh_range = 2 * int(pwh[0])
-            deltav = fpv[:int(len(fpv) / 2)]
-            centerfv = fpv[0]
-            fv_range = 2 * int(pwv[0])
-        else:
-            deltah = -fph[:int(len(fph) / 2)]
-            centerfh = fph[0]
-            fh_range = 2 * int(pwh[0])
-            deltav = fpv[:int(len(fpv) / 2)]
-            centerfv = fpv[-1]
-            fv_range = 2 * int(pwv[-1])
-        try:
-            fang_rad = np.arctan2(deltav, deltah)[0]
-        except:
-            fang_rad = 0
+    if centerfh == 0: fang_rad = np.pi/2
+    else: fang_rad = np.tan(centerfv / centerfh)
 
     fang_deg = (fang_rad) * 180 / np.pi
 
-    return summaph, fph, summapv, fpv, centerfh, fh_range, centerfv, fv_range, fang_deg
+
+    fh_range = pwh[fx]
+    fv_range = pwv[fy]
+    f_range = np.max([fh_range, fv_range,2])
+
+    return summaph,fph, summapv, fpv, centerfh, centerfv, f_range, fang_deg
 
 def als(data, lam=5e2, p=0.1, itermax=10):
     r"""
