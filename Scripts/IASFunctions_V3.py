@@ -80,6 +80,7 @@ def apply_drawing(values, window, tmp_file, size):
     :param window: main window
     :return: rectangle drown on temp image file
     '''
+
     image_file = values["file1"]
     begin_x = get_value("-BEGIN_X-", values)
     begin_y = get_value("-BEGIN_Y-", values)
