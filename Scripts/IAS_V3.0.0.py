@@ -222,10 +222,10 @@ layout_frame_ImagesR = [
 ]
 # lAYOUT GLOBAL INPUTS
 layout_frame_Images = [
-    [sg.Column(layout_frame_ImagesL, element_justification='c'),
-     sg.Column(layout_frame_ImagesR, element_justification='c')],
+    [sg.Column(layout_frame_ImagesL, element_justification='c',expand_x=True, expand_y=True),
+     sg.Column(layout_frame_ImagesR, element_justification='c', expand_x=True, expand_y=True)],
     [sg.Frame("Options", layout_frame_Options, size=(698, 270), title_location=sg.TITLE_LOCATION_TOP_LEFT,
-              font='Arial 12 bold')],
+              font='Arial 12 bold', expand_x=True, expand_y=True)],
 ]
 # LAYOUT 1D OPTIONS PLOT
 layout_frame_plot1D = [
@@ -240,11 +240,11 @@ layout_frame_plot1D = [
 ]
 # LAYOUT STAGES OF THE TREATMENT
 layout_frame_Steps = [
-    [sg.Radio('Frequency \nDomain', "RADIO1", default=False, key='fftradio'),
-     sg.Radio('Gaussian \nFilter', 'RADIO1', default=False, key='filterradio'),
-     sg.Radio('Acc. \nPhase-shift', "RADIO1", default=True, key='phaseradio'),
-     sg.Radio('Radial \nPhase-shift', "RADIO1", default=False, key='abelradio', enable_events=True),
-     sg.Radio('Density \nProfile', "RADIO1", default=False, key='densradio')],
+    [sg.Radio('Frequency \nDomain', "radiostg", default=False, key='fftradio', enable_events=True),
+     sg.Radio('Gaussian \nFilter', 'radiostg', default=False, key='filterradio', enable_events=True),
+     sg.Radio('Acc. \nPhase-shift', "radiostg", default=True, key='phaseradio', enable_events=True),
+     sg.Radio('Radial \nPhase-shift', "radiostg", default=False, key='abelradio', enable_events=True),
+     sg.Radio('Density \nProfile', "radiostg", default=False, key='densradio', enable_events=True)],
 ]
 # LAYOUT GLOBAL OUTPUTS
 layout_frame_Result = [
@@ -255,7 +255,7 @@ layout_frame_Result = [
      sg.Checkbox('Unc. Measurement', default=False, key='-checkstd-'),
      ],
     [sg.Canvas(key='canvasabel', size=(490, 400), background_color='black')],
-    [sg.Button('Save Plot', size=(16, 2), disabled=True, font='Arial 10 bold'),
+    [sg.Button('Save Image', size=(16, 2), disabled=True, font='Arial 10 bold'),
      sg.Button('Save Data', size=(16, 2), disabled=True, font='Arial 10 bold'),
      sg.Text('Colormap :'),
      sg.Combo(cmapIAS, default_value='default', key='-cmapcombo-',
@@ -266,8 +266,8 @@ layout_frame_Result = [
 ]
 # lAYOUT GLOBAL
 layout = [
-    [sg.Frame("Interferograms", layout_frame_Images, size=(700, 750), font='Arial 12 bold'),
-     sg.Frame("Target Profile", layout_frame_Result, size=(500, 750), title_location=sg.TITLE_LOCATION_TOP,
+    [sg.Frame("Interferograms", layout_frame_Images, size=(700, 760), font='Arial 12 bold'),
+     sg.Frame("Target Profile", layout_frame_Result, size=(500, 760), title_location=sg.TITLE_LOCATION_TOP,
               font='Arial 12 bold')],
 ]
 ######################################################################################################################
@@ -448,10 +448,9 @@ while True:
         w, h = originaltgt0[0].size
         scale = (width / w), (height / h)
 
-        if scale != 1:
-            im1 = originaltgt0[0].resize(size)
-        else:
-            im1 = originaltgt0[0]
+
+        im1 = originaltgt0[0].resize(size)
+
         data1 = image_to_data(im1)
 
         window['image1'].update(data=data1, size=size)
@@ -517,10 +516,7 @@ while True:
         w2, h2 = originalref0[0].size
         scale2 = (width2 / w2), (height2 / h2)
 
-        if scale2 != 1:
-            im2 = originalref0[0].resize(size2)
-        else:
-            im2 = originalref0[0]
+        im2 = originalref0[0].resize(size2)
 
         data2 = image_to_data(im2)
         window['image2'].update(data=data2, size=size2)
@@ -569,6 +565,7 @@ while True:
     '''
     if event == 'Analyse Data' or event == '-axisymm_pos-' or event == '-sigma_gblur-' \
             or event == '-centerfh-' or event == '-centerfv-' or event == '-sigma_gfilter-':
+
         apply_drawing(values, window, tmp_file, size)
         # Cleaning plots
         try:
@@ -1239,7 +1236,7 @@ while True:
         visible_f1d = False
         # Enable/Disable specific buttons and frames for 2D analysis
         window['Save Data'].update(disabled=False)
-        window['Save Plot'].update(disabled=False)
+        window['Save Image'].update(disabled=False)
         window['frame1d'].update(visible=False)
         window['2D Profile'].update(disabled=False)
         window['1D Profile'].update(disabled=False)
@@ -1249,6 +1246,12 @@ while True:
     # BUTTON DENS.PROFILE 2
     #########################################################################
     if event == '2D Profile':
+        visible_f1d = False
+        window['frame1d'].update(visible=False)
+
+    if (event == '2D Profile' or event == 'fftradio' or event == 'filterradio' or event == 'phaseradio'\
+        or event == 'abelradio' or event == 'densradio') and visible_f1d == False:
+
         # Cleaning plots
         try:
             fig_canvas_agg.get_tk_widget().forget()
@@ -1409,7 +1412,12 @@ while True:
     #########################################################################
     # BUTTON DENS.PROFILE 1D AND SLIDER POSITION
     #########################################################################
-    if (event == '1D Profile') or (event == 'sliderh'):
+    if event == '1D Profile':
+        visible_f1d = True
+        window['frame1d'].update(visible=True)
+
+    if (event == '1D Profile' or event == 'sliderh' or event == 'fftradio' or event == 'filterradio' or \
+        event == 'phaseradio' or event == 'abelradio' or event == 'densradio') and visible_f1d == True:
         # Cleaning plots
         try:
             fig_canvas_agg.get_tk_widget().forget()
@@ -1465,11 +1473,11 @@ while True:
 
                 if values['filterradio'] == True:
                     if centerfv != 0:
-                        ax1.scatter(fpv, [summapv[i] for i in fpv], color='red', marker='^', label='$\\nu_0$')
+                        ax1.scatter(fpv, [summapv[i] for i in fpv], color='red', marker='^', label='$\\nu_y$')
                         [ax1.text(x, summapv[x], '%d' % x) for x in fpv]
                         ax1.legend(loc='upper center', fancybox=True, shadow=True)
                     if centerfh != 0:
-                        ax2.scatter(fph, [summaph[i] for i in fph], color='red', marker='^', label='$\\nu_0$')
+                        ax2.scatter(fph, [summaph[i] for i in fph], color='red', marker='^', label='$\\nu_x$')
                         [ax2.text(x, summaph[x], '%d' % x) for x in fph]
 
                 ax2.set_xlabel('$Frequency\hspace{.5}\\nu\hspace{.5}(pixel)$', fontsize=10)
@@ -1514,7 +1522,6 @@ while True:
                 pos2 = int(h_prof2 / (factor * 1e6))
                 h_prof3 = int(get_value('-pos3-', values))
                 pos3 = int(h_prof3 / (factor * 1e6))
-
 
                 # Creating plot parameters
                 fig, ax1 = plt.subplots(figsize=(4.9, 4))
@@ -1600,7 +1607,7 @@ while True:
     # SAVING RESULTS
     #########################################################################
     #  BUTTON SAVEPLOT
-    elif event == 'Save Plot':
+    elif event == 'Save Image':
         save_filename_plot = sg.popup_get_file('File',
                                                file_types=[("PNG (*.png)", "*.png"), ("All files (*.*)", "*.*")],
                                                save_as=True, no_window=True)
