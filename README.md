@@ -83,8 +83,8 @@ The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferog
   > **Note:** The first click of the mouse defines de first value of the X and Y triangle coordinates, and the second click defines the end coordinates of the triangle. Case, the initial X (or Y) is bigger than the final X (or Y), these values will be exchanged. 
   - ***[BG Phase Fit]*** This parameter defines the values used to construct the background of the accumulated phase &Delta;&phi;.
     - For Gas/Vapor targets this value is set based on a percentage of smaller phase values in the selected area, and this background is defined by a 2D plane (*default is 5%*).
-    - For Plasmas, this parameter defines the border size border used to construct the background of the accumulated phase Δφ. The borders are defined based on a percentage of the selected area, and the background is obtained using a 4th-order 2D polynomial fitting from the selected border as shown in Fig. 2.a. The Fig. 2.b shows the accumulated phase shift without the fitted background.
-    - 
+    - For Plasmas, this parameter defines the border size border used to construct the background of the accumulated phase &Delta;&phi. The borders are defined based on a percentage of the selected area, and the background is obtained using a 4th-order 2D polynomial fitting from the selected border as shown in Fig. 2.a. The Fig. 2.b shows the accumulated phase shift without the fitted background.
+      
 |<img src = '/Images/Figure2.png'> |
 |:--:| 
 | *Fig. 2. (a) Accumulated phase map of LIP in 3D with a non-linear background and the selected border (in gray) used to construct the isolated background map; (b) Accumulated phase map of LIP in 3D after removing the background.* |
@@ -109,12 +109,12 @@ The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferog
 
 ### Target Profile
 - ***8. [Stages]:*** Stages frame allows the visualization of each result of the algorithm.
-  - ***[Fourier Transform]*** This frequency map (Fig. 3.a) is built from the Fourier Transform of the plasma interferogram. Among the frequency positions highlighted in the 1D frequency graph (Fig. 3.b), the software automatically selects the frequency that generates a negative phase shift map. The selected frequency is marked with a red line over a pixel line (or column) identifying the ***[Filter Frequency]*** (&nu;<sub>0</sub>). If the ***[Filter Frequency]***  is equal to zero, the software will set the new valor value automatically.   
-    > **Note:** The user can change this ***[Filter Frequency]*** manually.
+  - ***[Fourier Transform]*** This FFT Frequency map (Fig. 3.a) is built from the Fourier Transform of the target interferogram. The frequency positions highlighted in FFT Frequency map are automatically identified from pixel columns sum (vertical) and pixel lines sum (horizontal). The selected frequency is marked with a red line over a pixel line (or column) identifying the (&pm&nu;<sub>x</sub>) and (&pm&nu;<sub>y</sub>). 
+    > **Note:** The user can change this ***[Vert. (&nu;<sub>x</sub>)]*** and ***[Hor. (&nu;<sub>x</sub>)]*** manually. But, the IAS code automatically identifies the frequencies when values equal *'0'*. 
   
-  - ***[Gaussian Filter]*** This image is the Gaussian filter map (Fig. 3.c) applied to generate the phase map. This filter is built from the selected frequency &nu;<sub>0</sub> and the range frequency &Delta;&nu;(Fig. 3.d).  
+  - ***[Gaussian Filter]*** The Gaussian filter map (Fig. 3.b) is applied to generate the phase map. This filter is built from the selected frequencies &pm&nu;<sub>x</sub>, &pm&nu;<sub>y</sub> and the range frequency &Delta;&nu;(Fig. 3.d).  
 
-|<img src = '/Images/Figure3_A.PNG' width="80%">|
+|<img src = '/Images/Figure3.png' width="80%">|
 |:--:| 
 | *Fig. 3. (a) 2D and (b) 1D frequency domain obtained by the interferogram Fourier Transform with the selected frequency to be filtered; (c) Gaussian filter to be applied on the selected frequency; (d) 1D frequency domain with range frequency to apply the Gaussian filter.* |
 
@@ -122,19 +122,19 @@ For the next three steps, users have the option of viewing the 2D maps or 1D cur
  
   - ***[Acc. Phase-shift]*** Accumulated phase-shift (&Delta;&phi;) of the plasma (in rad) retrieved from the interferograms.
 
-|<img src = '/Images/Figure4.PNG' width="80%">|
+|<img src = '/Images/Figure4.png' width="80%">|
 |:--:| 
 |*Fig. 4. (a) 2D accumulated phase-shift map and (b) 2D standard deviation map; (c) 1D accumulated phase curves and (d) standard deviation of one curve. All phase values are given in rad.*|   
     
   - ***[Radial Phase-shift]*** Radial phase-shift (&Delta;&phi;<sup>r</sup>) map in $rad/\mu m$ obtained after applying an Inverse Abel Transform from Accumulated Phase-shift map (&Delta;&phi;).
 
-|<img src='/Images/Figure5.PNG' width="80%">|
+|<img src='/Images/Figure5.png' width="80%">|
 |:--:| 
 |*Fig. 5. (a) 2D radial phase-shift map and (b) 2D standard deviation map; (c) and (d) accuracy between 1D radial phase-shift and normalized phase-shift curves. All radial phase values are given in rad/&mu;m.*|  
 
   - ***[Density Profile]*** molecular density distribution ($N$) of the Gas-Jet in $cm^{−3}$ built from the radial phase-shift ($\Delta\phi_r$) and ***[Laser Wavelength]*** ($\lambda$).
     
-|<img src='/Images/Figure6.PNG' width="80%">|
+|<img src='/Images/Figure6.png' width="80%">|
 |:--:| 
 |*Fig. 5. (a) 2D plasma density map and (b) 2D standard deviation map; (c) 1D plasma density curves and (d) standard deviation of one density curve. All density values are given in cm&oline;³ .*|
 
