@@ -91,11 +91,10 @@ The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferog
 - ***6. [Input Parameteres]*** Frame to set the experimental parameters used to acquire the interferogram. These parameters are:
   - ***[Scaling Factor]*** and ***[Uncertainty Scaling Factor]*** Interferogram scale in micrometers/pixel (*default is 1.000&plusmn;0.001 &nu;m/pixel*).
   - ***[Laser Wavelength]*** (&lambda;) and ***[Laser FHWM]*** (&Delta;&lambda;) in nm (*default is 395&plusmn;0 nm, respectively*).
-  - 
-  - ***[Gas type]*** list box of some types of gases: *H<sub>2</sub>*, *N<sub>2</sub>*, *He* and *Ar* (*default is N<sub>2</sub>*).
-  - ***[Polarizability]*** (&alpha;) in angstrom³. This parameter usually refers to the tendency of matter to acquire an electric dipole moment when subjected to an electric field (*default is 1.710 A³*).
+  - ***[Gas/Vapor]*** This frame is able only to Gas/Vapor targets.
+    - The list box of some types of gases: *H<sub>2</sub>*, *N<sub>2</sub>*, *He* and *Ar* (*default is *) and ***[Polarizability]*** (&alpha;) in angstrom³. This parameter usually refers to the tendency of matter to acquire an electric dipole moment when subjected to an electric field (*default is 1.710 A³ for N<sub>2</sub>*).
     > **Note**
-    > The polarizability value is automatically filled in after selecting the gas type. If the user wants to use gases not yet listed, the gas polarizability value can be entered manually.
+    > The polarizability value is automatically filled in after selecting the gas type. If the user wants to use gases not yet listed, the gas/vapor polarizability value can be entered manually.
 
 - ***7. [Analysis Parameters]*** Parameters frame to analyze the interferogram.
   - ***[Filter Frequency]*** ((&nu;<sub>0</sub>) This parameter is set automatically by the algorithm and this position defines which frequency will be used to apply the Inverse Fourier Transform and build the phase map of the plasma. This parameter is given in pixels.
