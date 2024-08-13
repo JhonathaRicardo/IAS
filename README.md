@@ -150,18 +150,18 @@ For the next three steps, users have the option of viewing the 2D maps or 1D cur
 ## How it works
 A detailed description of the algorithm will be presented in a future article. However, the summarized data processing by the software algorithm is described by the flowchart shown in *Fig. 8*:
 
-|<img src = '/Images/Figure8.PNG' width="80%">|
+|<img src = '/Images/Figure7.png' width="80%">|
 |:--:| 
 | *Fig. 8. Scheme of the algorithm data processing.* |
 
-In the scheme of the algorithm data processing (*Fig. 8*): *I<sub>Target</sub>* and *I<sub>Reference</sub>* are the intensity functions of the bi-dimensional fringes fields obtained from the gas and the reference interferograms, respectively. The hats denote the Fourier transform of the intensities, *N<sup>gas</sup>* is the gas jet density calculated from its refractive index, *n*, and polarizability, &alpha;, using the Lorentz-Lorenz relation [[14,15]](#reference).
+In the scheme of the algorithm data processing (*Fig. 7*): *I<sub>Target</sub>* and *I<sub>Reference</sub>* are the intensity functions of the bi-dimensional fringes fields obtained from the target and the reference interferograms, respectively. The hats denote the Fourier transform of the intensities, *N<sup>gas</sup>* is the gas jet density calculated from its refractive index, *n*, and polarizability, &alpha;, using the Lorentz-Lorenz relation [[14,15]](#reference).
 
 ## Examples
 In the Examples folder of this repository, the user will find two examples of interferogram targets: Gas and Plasma. These interferograms were obtained using a Mach-Zehnder-like interferometer, as discussed in [[16]](#reference).
 
 ## Authors
 Interferometry Analysis - Gas-Jet software was developed by researchers of the High-Power Ultrashort Pulse Lasers Group from the Center for Lasers and
-Applications (CLA) from the Instituto de Pesquisas Energéticas e Nucleares ([IPEN](https://www.ipen.br/portal_por/portal/default.php)), and of the Instituto Tecnológico de Aeronáutica ([ITA](http://www.ita.br/)).
+Applications (CLA) and project of Brazilian Multipurpose Reactor (RMB) from the Instituto de Pesquisas Energéticas e Nucleares ([IPEN](https://www.ipen.br/portal_por/portal/default.php)).
 
 * Jhonatha Ricardo dos Santos [![logo_ORCID](/Images/logo_ORCID.png)](https://orcid.org/0000-0001-7877-0580)
 * Armando Valter Felicio Zuffi [![logo_ORCID](/Images/logo_ORCID.png)](https://orcid.org/0000-0001-5705-1499)
