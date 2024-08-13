@@ -97,13 +97,14 @@ The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferog
     > The polarizability value is automatically filled in after selecting the gas type. If the user wants to use gases not yet listed, the gas/vapor polarizability value can be entered manually.
 
 - ***7. [Analysis Parameters]*** Parameters frame to analyze the interferogram.
-  - ***[Filter Frequency]*** ((&nu;<sub>0</sub>) This parameter is set automatically by the algorithm and this position defines which frequency will be used to apply the Inverse Fourier Transform and build the phase map of the plasma. This parameter is given in pixels.
-  - ***[Filter Range]*** (&Delta;&nu;) frequency spread of the Gaussian frequency filter in pixel. The initial &Delta;&nu; depends on the image dimension but can changed by the user.
-    > **Note:** The algorithm sets the frequency that generates a negative phase map. Because the refractive index of the plasma is less than 1. This is an intrinsic characteristic of plasmas, and it is considered in the calculations of the algorithm.
-  - ***[Gaussian Blur]*** (&sigma;<sub>blur</sub>) Spread of the bi-dimensional Gaussian image filter. The standard deviation of the Gaussian filter ($\sigma$) defined by the user is equal for all axes. The ***[Gaussian Blur]*** is used to improve the target symmetry (*default is 5 pixels*).  
+  - ***[FFT Filter Frequency]***:  The ***[Vert. (&nu;<sub>x</sub>)]*** and ***[Hor. (&nu;<sub>x</sub>)]*** parameters are set automatically by the algorithm and these positions define which frequencies (&pm&nu;<sub>x</sub>) and (&pm&nu;<sub>y</sub>) (*Horizontal  Vertical*) will be used to apply the Inverse Fourier Transform and build the phase map of the target.
+  - ***[Filter Range]*** (&Delta;&nu;) frequency spread of the Gaussian frequency filter in pixel. The initial &Delta;&nu; depends on the image dimension but can changed by the user. These parameters are given in pixels
+    > **Note:** For Plasmas the algorithm sets the frequencies that generate a negative phase map. Because the refractive index of the plasma is less than 1. This is an intrinsic characteristic of plasmas. However, the relative's positive and negative frequencies depend on interferogram files.
+  - ***[Gaussian Blur]*** (&sigma;<sub>blur</sub>) Spread of the bi-dimensional Gaussian image filter. The standard deviation of the Gaussian filter ($\sigma$) defined by the user is equal for all axes. The ***[Gaussian Blur]*** is used to improve the target symmetry.
+    > **Note:** The (&sigma;<sub>blur</sub>) is automatically calculated from FFT maps, but users can set this value manually. 
   
-  - ***[Axisymmetric Orientation]*** Definition of the axis of symmetry (or axisymmetric) to apply the Inverse Abel Transform. The axisymmetric can be horizontal or vertical (*default is Horizontal for Plasmas and Vertical for Gas/Vapor targets*).
-  - ***[Axisymmetric Position]*** Axisymmetric position on the accumulated phase map to apply the Abel inversion.
+  - ***[Axisymmetric Orientation]*** Definition of the axis of symmetry (or axisymmetric) to apply the Inverse Abel Transform. The axisymmetric can be Horizontal or Vertical (*default is Horizontal for Plasmas and Vertical for Gas/Vapor targets*) and the ***[Axisymmetric Position]*** is a pixel position on the accumulated phase map to apply the Abel inversion. This position is only able for Horizontal or Vertical orientations. For *None (Hor. our Vert)* orientations the IAS code doesn't apply Abel Inversion. In this case, the density of the target is retrieved by approximation [[15]](#reference).
+    
 
 ### Gas-Jet Profile
 - ***8. [Stages]:*** Stages frame allows the visualization of each result of the algorithm.
@@ -205,15 +206,15 @@ You can find the DOI for the latest version at [Zenodo](https://zenodo.org/badge
 - [5] S. Shiraishi, C. Benedetti, A. J. Gonsalves, K. Nakamura, B. H. Shaw, T. Sokollik, J. van Tilborg, C. G. R. Geddes, C. B. Schroeder, C. Toth, E. Esarey, and W. P. Leemans, “Laser red shifting based characterization of wakefield excitation in a laser-plasma accelerator,” Phys. Plasmas 20, 063103 (2013).[DOI 10.1063/1.4810802](https://doi.org/10.1063/1.4810802).
 - [6] A. J. Goers, G. A. Hine, L. Feder, B. Miao, F. Salehi, J. K. Wahlstrand, and H. M. Milchberg, “Multi-MeV electron acceleration by Subterawatt laser pulses,” Phys. Rev. Lett. 115, 194802 (2015).[DOI 10.1103/PhysRevLett.115.194802](https://doi.org/10.1103/PhysRevLett.115.194802).
 - [7] F. Brandi and L. A. Gizzi, “Optical diagnostics for density measurement in high-quality laser-plasma electron accelerators,” High Power Laser Sci. Eng. 7, e26 (2019).[DOI 10.1017/hpl.2019.11](https://doi.org/10.1017/hpl.2019.11).
-- [8] A. K. Arunachalam, “Investigation of laser-plasma interactions at near-critical densities,” Dissertation (University of Jena, 2017)..
+- [8] A. K. Arunachalam, “Investigation of laser-plasma interactions at near-critical densities,” Dissertation (University of Jena, 2017).
 - [9] Harris, C.R., Millman, K.J., van der Walt, S.J. et al. Array programming with NumPy. Nature 585, 357–362 (2020). [DOI: 10.1038/s41586-020-2649-2](https://www.nature.com/articles/s41586-020-2649-2). 
 - [10] Pauli Virtanen, et. al. (2020) SciPy 1.0: Fundamental Algorithms for Scientific Computing in Python. Nature Methods, 17(3), 261-272. [DOI: 10.1038/s41592-019-0686-2](https://www.nature.com/articles/s41592-019-0686-2).
 - [11] Gibson, Stephen; Hickstein, Daniel D.; Yurchak, Roman; Ryazanov, Mikhail; Das, Dhrubajyoti; Shih, Gilbert.(2022) PyAbel, PyAbel: v0.9.0, Zenodo,  [DOI: 10.5281/zenodo.7438595](https://doi.org/10.5281/zenodo.7438595).
 - [12] Clark, A. (2015). Pillow (PIL Fork) Documentation. readthedocs. Retrieved from [https://buildmedia.readthedocs.org/media/pdf/pillow/latest/pillow.pdf](https://buildmedia.readthedocs.org/media/pdf/pillow/latest/pillow.pdf).
 - [13] Stéfan van der Walt, Johannes L. Schönberger, Juan Nunez-Iglesias, François Boulogne, Joshua D. Warner, Neil Yager, Emmanuelle Gouillart,
 Tony Yu and the scikit-image contributors. scikit-image: Image processing in Python. PeerJ 2:e453 (2014). [DOI: 10.7717/peerj.453](https://doi.org/10.7717/peerj.453)
-- [13] J. D. Hunter, Matplotlib: A 2D Graphics Environment. Computing in Science & Engineering, 9 (3), 90-95 (2007). [
-DOI: 10.1109/MCSE.2007.55] (https://ieeexplore.ieee.org/document/4160265)
+- [14] J. D. Hunter, Matplotlib: A 2D Graphics Environment. Computing in Science & Engineering, 9 (3), 90-95 (2007). [DOI: 10.1109/MCSE.2007.55](https://ieeexplore.ieee.org/document/4160265)
+- [15] A. V. F. Zuffi, J. R. d. Santos, E. P. Maldonado, N. D. V. Jr, and R. E. Samad, "Femtosecond Laser-Plasma Dynamics Study by a Time-Resolved Mach-Zehnder-Like Interferometer " Appl. Opt. 62, C128-C134 (2023)
 - [14] H. A. Lorentz, "Über die Beziehungzwischen der Fortpflanzungsgeschwindigkeit des Lichtes derKörperdichte", Ann. Phys. 9, 41-665, (1880). [DOI: 10.1002/andp.18802450406]( https://doi.org/10.1002/andp.18802450406)
 - [15] L. Lorenz, "Über die Refractionsconstante", Ann. Phys. 11, 70-103  (1880). [DOI: 10.1002/andp.18802470905](https://doi.org/10.1002/andp.18802470905)
 - [16] A. V. F. Zuffi, E. P. Maldonado, N. D. Vieira, and R. E. Samad, “Development of a modified Mach-Zehnder interferometer for time and space density measurements for laser wakefield acceleration,” in SBFoton International Optics and Photonics Conference (IEEE, 2021).
