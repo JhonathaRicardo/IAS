@@ -106,7 +106,7 @@ The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferog
   - ***[Axisymmetric Orientation]*** Definition of the axis of symmetry (or axisymmetric) to apply the Inverse Abel Transform. The axisymmetric can be Horizontal or Vertical (*default is Horizontal for Plasmas and Vertical for Gas/Vapor targets*) and the ***[Axisymmetric Position]*** is a pixel position on the accumulated phase map to apply the Abel inversion. This position is only able for Horizontal or Vertical orientations. For *None (Hor. our Vert)* orientations the IAS code doesn't apply Abel Inversion. In this case, the density of the target is retrieved by approximation [[15]](#reference).
     
 
-### Gas-Jet Profile
+### Target Profile
 - ***8. [Stages]:*** Stages frame allows the visualization of each result of the algorithm.
   - ***[Fourier Transform]*** This frequency map (Fig. 3.a) is built from the Fourier Transform of the plasma interferogram. Among the frequency positions highlighted in the 1D frequency graph (Fig. 3.b), the software automatically selects the frequency that generates a negative phase shift map. The selected frequency is marked with a red line over a pixel line (or column) identifying the ***[Filter Frequency]*** (&nu;<sub>0</sub>). If the ***[Filter Frequency]***  is equal to zero, the software will set the new valor value automatically.   
     > **Note:** The user can change this ***[Filter Frequency]*** manually.
