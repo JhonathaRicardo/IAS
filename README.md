@@ -28,7 +28,8 @@ Interferometry Analysis Software (IAS) is a dedicated tool for studying gas, vap
 * [Reference](#reference)
 
 ## Introduction
-  The development of diagnostic tools is significant for a better understanding of laser-plasma interactions [[1]](#reference). An accurate diagnostic is crucial, as instabilities in both target and laser pulses can result in low reproducibility of processes and impair the quality of the intended interaction [[2]](#reference). Among the various non-perturbing optical methods that can be used to diagnose a gaseous target [[3-6]](#reference), interferometry is a very accurate technique capable of quantifying tiny optical path differences and, therefore, suitable for measuring density variations of gases [[7, 8]](#reference) and laser-induced plasmas [[1]](#reference). The main drawback of the technique is that it returns the integrated phase along the light path, requiring deconvolution methods for retrieving the target density profile. The software IAS was developed due to the need for a new diagnostic tool to aid in the characterization of supersonic gas jets, vapor, and plasmas, quickly and reliably. It is a compilation of two other software developed by our research group: *Interferometry Analysis - Gas-Jet* and *Interferometry Analysis - LIP*. IAS is a part of two complementary works: 
+  The development of diagnostic tools is significant for a better understanding of laser-plasma interactions [[1]](#reference). An accurate diagnostic is crucial, as instabilities in both target and laser pulses can result in low reproducibility of processes and impair the quality of the intended interaction [[2]](#reference). Among the various non-perturbing optical methods that can be used to diagnose a gaseous target [[3-6]](#reference), interferometry is a very accurate technique capable of quantifying tiny optical path differences and, therefore, suitable for measuring density variations of gases [[7, 8]](#reference) and laser-induced plasmas [[1]](#reference). The main drawback of the technique is that it returns the integrated phase along the light path, requiring deconvolution methods for retrieving the target density profile. The software IAS was developed due to the need for a new diagnostic tool to aid in the characterization of supersonic gas jets, vapor, and plasmas, quickly and reliably. IAS was developed from two other software developed by our research group (*Interferometry Analysis - Gas-Jet* and *Interferometry Analysis - LIP*). The current version of IAS was developed after several tests and re-evaluations of the density and uncertainty calculations of the targets.
+IAS is a part of two complementary works: 
   - Studies to implement a laser-plasma accelerator infrastructure laser isotopic separation at the Nuclear and Energy Research Institute (IPEN), in Brazil.
   - Studies to implement a laser isotopic separation process for nuclear medicine application in the project of Brazilian Multipurpose Reactor (RMB).    
 
@@ -140,14 +141,10 @@ For the next three steps, users have the option of viewing the 2D maps or 1D cur
 - ***9. [1D Profile]*** This button enables a 1D frame (*Item 15 in Fig. 1*) with options for the user to visualize the curves of each selected stage for different positions on the chosen symmetry axis.
 - ***10. [2D Profile]*** This button enables the visualization of each ***[Stage]*** in 2D images.
 - ***11. [Uncertainty of Measurement]*** This checkbox enables the visualization of the uncertainty of the accumulated phase, radial phase and density for 1D and 2D profiles.
-- ***12. [Result Frame]*** In this frame user can verify the results of each stage of the data processing. The results can be seen in 1D or 2D. Results in 2D have options for ***[Colormap distribution]*** With this list box the user can choose between three colormaps distributions: linear (*Fig 7.a*), quadratic (*Fig 7.a*), or cubic(*Fig 7.c*).
+- ***12. [Result Frame]*** In this frame user can verify the results of each stage of the data processing. The results can be seen in 1D or 2D. Results in 2D have different colormaps ***[Colormap]***.
+  >**Note:** *default* and *default_r* colormaps are made specifically for IAS. Other colormaps are in matplotlib database.
 - ***13. [Save Plot]*** This button allows the user to save the visualized plot as an image file (*.png*, *.jpg*, *.bmp*, etc).
 - ***14. [Save Data]*** This button allows the user to save the 2D array that generated the visualized plot as a *.dat* or *.txt* file.
-
-|<img src = '/Images/Figure7.PNG' width="80%">|
-|:--:| 
-|*Fig. 7. Examples with the colormaps distributions: (a) Linear distribution, (b) Quadratic distribution, (c) Cubic Distribution.* |
-
 - ***15. [1D Profile]*** This Frame allows the visualization of 1D profiles (accumulated phase, radial phase and density) for different positions over the Axisymmetry.
 
 ## How it works
