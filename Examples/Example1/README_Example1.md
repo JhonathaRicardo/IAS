@@ -1,4 +1,4 @@
-## Example1 - Analysis of Induced Laser Plasma
+## Example1 - Analysis of Gas Target
 In the Example folder of this repository, the user will find two interferogram images shown in Fig. 9. These images were obtained using a Mach-Zehnder-like interferometer, as discussed in [16].
   
 |<img src = '/Example/interferogram (reference).png' width='40%'> <img src = '/Example/interferogram (plasma).png' width='40%'>|
