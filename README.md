@@ -4,7 +4,7 @@ Interferometry Analysis Software (IAS) is a dedicated tool for studying gas, vap
 </p>
 
 <p align="center">
-  <img src = '/Images/Figure0.PNG' width="80%" align="center">
+  <img src = '/Images/Figure1.PNG' width="80%" align="center">
 </p>
 
 ![License](https://img.shields.io/badge/license-MIT-green)
