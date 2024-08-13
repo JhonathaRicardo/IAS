@@ -80,13 +80,18 @@ The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferog
 ### Options
 - ***5. [Select Area]*** Parameters frame for users select the interferogram area to apply the algorithm. The selected area is defined by a rectangle with edges defined by X and Y coordinates. The user can select an area using the mouse click over the image or the combo box ***[Y Coord]*** and ***[X Coord]***.
   > **Note:** The first click of the mouse defines de first value of the X and Y triangle coordinates, and the second click defines the end coordinates of the triangle. Case, the initial X (or Y) is bigger than the final X (or Y), these values will be exchanged. 
-  - ***[BG Phase Fit]*** This parameter defines the values used to construct the background of the accumulated phase &Delta;&phi;. Values are set based on a percentage of smaller phase values in the selected area, and this background is defined by a 2D plane (*default is 5%*).
-  - 
-- ***6. [Input Parameteres]*** Frame to set the experimental parameters used to obtain the interferogram. These parameters are:
+  - ***[BG Phase Fit]*** This parameter defines the values used to construct the background of the accumulated phase &Delta;&phi;.
+    - For Gas/Vapor targets this value is set based on a percentage of smaller phase values in the selected area, and this background is defined by a 2D plane (*default is 5%*).
+    - For Plasmas, this parameter defines the border size border used to construct the background of the accumulated phase Δφ. The borders are defined based on a percentage of the selected area, and the background is obtained using a 4th-order 2D polynomial fitting from the selected border as shown in Fig. 2.a. The Fig. 2.b shows the accumulated phase shift without the fitted background.
+    - 
+|<img src = '/Images/Figure2.png'> |
+|:--:| 
+| *Fig. 2. (a) Accumulated phase map of LIP in 3D with a non-linear background and the selected border (in gray) used to construct the isolated background map; (b) Accumulated phase map of LIP in 3D after removing the background.* |
+    
+- ***6. [Input Parameteres]*** Frame to set the experimental parameters used to acquire the interferogram. These parameters are:
   - ***[Scaling Factor]*** and ***[Uncertainty Scaling Factor]*** Interferogram scale in micrometers/pixel (*default is 1.000&plusmn;0.001 &nu;m/pixel*).
-  - ***[Fringes Orientation]*** Definition of the interferogram fringes orientation (*default is horizontal*).
-  
   - ***[Laser Wavelength]*** (&lambda;) and ***[Laser FHWM]*** (&Delta;&lambda;) in nm (*default is 395&plusmn;0 nm, respectively*).
+  - 
   - ***[Gas type]*** list box of some types of gases: *H<sub>2</sub>*, *N<sub>2</sub>*, *He* and *Ar* (*default is N<sub>2</sub>*).
   - ***[Polarizability]*** (&alpha;) in angstrom³. This parameter usually refers to the tendency of matter to acquire an electric dipole moment when subjected to an electric field (*default is 1.710 A³*).
     > **Note**
@@ -98,7 +103,7 @@ The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferog
     > **Note:** The algorithm sets the frequency that generates a negative phase map. Because the refractive index of the plasma is less than 1. This is an intrinsic characteristic of plasmas, and it is considered in the calculations of the algorithm.
   - ***[Gaussian Blur]*** (&sigma;<sub>blur</sub>) Spread of the bi-dimensional Gaussian image filter. The standard deviation of the Gaussian filter ($\sigma$) defined by the user is equal for all axes. The ***[Gaussian Blur]*** is used to improve the target symmetry (*default is 5 pixels*).  
   
-  - ***[Axisymmetric Orientation]*** Definition of the axis of symmetry (or axisymmetric) to apply the Inverse Abel Transform. The axisymmetric can be horizontal or vertical (*default is vertical*).
+  - ***[Axisymmetric Orientation]*** Definition of the axis of symmetry (or axisymmetric) to apply the Inverse Abel Transform. The axisymmetric can be horizontal or vertical (*default is Horizontal for Plasmas and Vertical for Gas/Vapor targets*).
   - ***[Axisymmetric Position]*** Axisymmetric position on the accumulated phase map to apply the Abel inversion.
 
 ### Gas-Jet Profile
