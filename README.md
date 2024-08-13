@@ -4,7 +4,7 @@ Interferometry Analysis Software (IAS) is a dedicated tool for studying gas, vap
 </p>
 
 <p align="center">
-  <img src = '/Images/Figure1.png' width="80%" align="center">
+  <img src = '/Images/Figure0.png' width="80%" align="center">
 </p>
 
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -28,7 +28,7 @@ Interferometry Analysis Software (IAS) is a dedicated tool for studying gas, vap
 * [Reference](#reference)
 
 ## Introduction
-  The development of diagnostic tools is significant for a better understanding of laser-plasma interactions [[1]](#reference). An accurate diagnostic is crucial, as instabilities in both target and laser pulses can result in low reproducibility of processes and impair the quality of the intended interaction [[2]](#reference). Among the various non-perturbing optical methods that can be used to diagnose a gaseous target [[3-6]](#reference), interferometry is a very accurate technique capable of quantifying tiny optical path differences and, therefore, suitable for measuring density variations of gases [[7, 8]](#reference) and laser-induced plasmas [[1]](#reference). The main drawback of the technique is that returns the integrated phase along the light path, requiring deconvolution methods for retrieving the target density profile. The software IAS was developed due to the need for a new diagnostic tool to aid in the characterization of supersonic gas jets, vapor, and plasmas, quickly and reliably. It is a compilation of two other software developed by our research group: *Interferometry Analysis - Gas-Jet* and *Interferometry Analysis - LIP*. IAS as a part of two complementary works: 
+  The development of diagnostic tools is significant for a better understanding of laser-plasma interactions [[1]](#reference). An accurate diagnostic is crucial, as instabilities in both target and laser pulses can result in low reproducibility of processes and impair the quality of the intended interaction [[2]](#reference). Among the various non-perturbing optical methods that can be used to diagnose a gaseous target [[3-6]](#reference), interferometry is a very accurate technique capable of quantifying tiny optical path differences and, therefore, suitable for measuring density variations of gases [[7, 8]](#reference) and laser-induced plasmas [[1]](#reference). The main drawback of the technique is that it returns the integrated phase along the light path, requiring deconvolution methods for retrieving the target density profile. The software IAS was developed due to the need for a new diagnostic tool to aid in the characterization of supersonic gas jets, vapor, and plasmas, quickly and reliably. It is a compilation of two other software developed by our research group: *Interferometry Analysis - Gas-Jet* and *Interferometry Analysis - LIP*. IAS is a part of two complementary works: 
   - Studies to implement a laser-plasma accelerator infrastructure laser isotopic separation at the Nuclear and Energy Research Institute (IPEN), in Brazil.
   - Studies to implement a laser isotopic separation process for nuclear medicine application in the project of Brazilian Multipurpose Reactor (RMB).    
 
@@ -42,32 +42,35 @@ Users also can create a single .exe file using the [pyinstaller](https://pyinsta
 Users who do not use Python IDEs can utilize the software through the executable file available for download [here](https://drive.google.com/file/d/1K_-3wm8TOzxROLyAc22AkRXlRvD3GjjI/view?usp=sharing)
 
 ## How to use it
-The “Interferometry Analysis – Gas-Jet” has a graphical interface to facilitate its use, and this section provides a simple review of the software's functions and how to employ them.
+The *Interferometry Analysis Software (IAS)* has a graphical interface to facilitate its use, and this section provides a simple review of the software's functions and how to employ them.
 
 ### Main Screen
 The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferograms, Options, and LIP Profile. Each of these parts will be detailed below.
 
-|<img src = '/Images/Figure1.PNG'> |
+|<img src = '/Images/Figure1.png'> |
 |:--:| 
 | *Fig.1. Software Main Screen* |
 
 ### Interferograms
-- ***1. [Interferogram (Gas-Jet)]*** interferogram frame.
+- ***1. [Interferogram (Target)]*** interferogram frame.
 
-  - ***[Open File(s)]*** Open interferogram(s) file(s) with the presence of a gaseous target. Image file extensions should preferably be *.png* or *.snp.* (Newport proprietary format) for Newport CCD. However, all image extensions (*.gif*, *.jpg*, *.bmp*, etc) can be used. The path to the opened file is shown in the text box immediately above. If more than one file has been opened, each one is analyzed individually, and the average of all results is presented to the user.
-    > **Warning**   
-    >  Interferometry Analysis - Gas-Jet software only works with grayscale image files. 
+  - ***[Open File(s)]*** Open interferogram(s) file(s) with the presence of a gaseous target. Image file extensions should preferably be *.png* or *.snp.* (Newport proprietary format) for Newport CCD. However, all image extensions (*.gif*, *.jpg*, *.bmp*, etc) can be used. The path to the opened file is shown in the text box immediately above. For more than one file has been opened, two types of analysis can be made:
+  -  One reference file and *n* target files, or;
+  -  *n*  reference file and *n* target files.
+    > **Warning**
+    >  For different numbers of reference and target files, the IAS code utilizes just a single reference file.
+    >  IAS only works with grayscale image files.  
   
   - ***[Rotate]*** The image rotation in degrees. Positive degrees promote counterclockwise rotation.  
 
   - ***[Original Size]*** Original dimensions of the image file (width, height). 
-    > **Note** The interferogram shown is scaled to screen size (428,342) for users' viewing only. However, all processes to determine the plasma density profile are done with the original dimensions of the image file.
+    > **Note** The interferogram shown is scaled to screen size for users' viewing only. However, all processes to determine the plasma density profile are done with the original dimensions of the image file.
 
 - ***2. [Interferogram (Ref.)]*** Scaled reference interferogram.
 
   - ***[Open Ref.]*** Open an undisturbed interferogram file. Image file extensions should preferably be .png or .snp. However, all image extensions (*.gif*, *.jpg*, *.bmp*, etc) can be used. The path to open the file is shown in the textbox above. Unlike interferogram gas jet files, the algorithm allows the insertion of only one reference file.
     > **Warning**   
-    >  Interferometry Analysis - Gas-Jet software only works with grayscale image files. 
+    >  IAS only works with grayscale image files. 
 
 - ***3. [Analyse Data]*** From this command button, the software will apply data processing to generate the accumulated phase-shift map, the radial phase-shift map, and the map of the molecular density distribution of the gaseous target.
 
@@ -77,7 +80,7 @@ The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferog
 ### Options
 - ***5. [Select Area]*** Parameters frame for users select the interferogram area to apply the algorithm. The selected area is defined by a rectangle with edges defined by X and Y coordinates. The user can select an area using the mouse click over the image or the combo box ***[Y Coord]*** and ***[X Coord]***.
   > **Note:** The first click of the mouse defines de first value of the X and Y triangle coordinates, and the second click defines the end coordinates of the triangle. Case, the initial X (or Y) is bigger than the final X (or Y), these values will be exchanged. 
-  - ***[BG Phase Fit]*** This parameter defines the values used to construct the background of the accumulated phase &Delta;&phi;. Values are set based on a percentage of smaller phase values in the selected area, and this background is defined by a 2D plane (*default is 1%*).
+  - ***[BG Phase Fit]*** This parameter defines the values used to construct the background of the accumulated phase &Delta;&phi;. Values are set based on a percentage of smaller phase values in the selected area, and this background is defined by a 2D plane (*default is 5%*).
   - 
 - ***6. [Input Parameteres]*** Frame to set the experimental parameters used to obtain the interferogram. These parameters are:
   - ***[Scaling Factor]*** and ***[Uncertainty Scaling Factor]*** Interferogram scale in micrometers/pixel (*default is 1.000&plusmn;0.001 &nu;m/pixel*).
