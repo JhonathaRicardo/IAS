@@ -1,7 +1,7 @@
 # Software: Interferometry Analysis - Gas Jet - ARMANDO'S BETA(Version 3.0.1)
 # Authors: Jhonatha Ricardo dos Santos, Armando Zuffi, Ricardo Edgul Samad, Nilson Dias Vieira Junior
 # Python 3.11
-# Last update: 2024_08_13
+# Last update: 2024_08_14
 
 # LYBRARIES
 # The Python Standard Library
@@ -102,18 +102,23 @@ pos2 = '20'
 pos3 = '30'
 #colormap
 cmapIAS = ['default','default_r', 'rainbow', 'rainbow_r', 'gist_rainbow', 'gist_rainbow_r', 'jet', 'jet_r']
+#ScreenDimension
+SCNwidth, SCNheight = SCNsize = sg.Window.get_screen_size()
+##############################################################################################
+#WINDOW DIMENSION (Default = 90%)
+WINwidth, WINheight = WINsize = (int(0.80*SCNwidth), int(0.80*SCNheight))
+##############################################################################################
 # Images Dimensions
-WINwidth, WINheight = WINsize = sg.Window.get_screen_size()
 width, height = size = int(0.3*WINwidth), int(0.48*WINheight)  # Scale image - interferogram
-
 width2, height2 = size2 = int(0.16*WINwidth), int(0.27*WINheight)  # Scale image - Ref
-width3, height3 = size3 =  int(0.3*WINwidth), int(0.4*WINheight)  # Scale image - Result
+width3, height3 = size3 =  int(0.25*WINwidth), int(0.35*WINheight)  # Scale image - Result
 # Min and Max values of Interferogram Image
 minvalue_x, maxvalue_x, minvalue_y, maxvalue_y = 0, int(0.28*WINwidth), 0, int(0.5*WINheight)
 # Frame 1D visible
 visible_f1d = False
 ###############################################################################################
 '''
+
 ########################################################################################
 #Windows LAYOUTS
 Building frames for main windows
@@ -124,7 +129,6 @@ Building frames for main windows
 layout_frame_ImgSample = [
     [sg.Text('')],
     [sg.Image(size=size, background_color='black', key='image1',enable_events=True)],
-    [sg.Text('')],
     [sg.Input(expand_x=True, disabled=True, key='file1', visible='True')],
     [sg.Button('Open File(s)', font='Arial 10 bold'),
      sg.Button('Rotate (°)', visible=True, font='Arial 10 bold', disabled=True),
@@ -137,7 +141,6 @@ layout_frame_ImgReference = [
     [sg.Text('')],
     [sg.Image(size=size2, background_color='black',
               key='image2', enable_events=True)],
-    [sg.Text('')],
     [sg.Input(expand_x=True, disabled=True, key='file2', visible='True')],
     [sg.Button('Open Ref.', font='Arial 10 bold')],
 ]
@@ -208,31 +211,31 @@ layout_frame_Options = [
     [sg.Text('Target Type:'),
      sg.Combo(['Gas/Vapor', 'Plasma'], default_value='Gas/Vapor', enable_events = True, key='-combotype-')],
     [sg.Frame('Select Area', layout_area_selection, title_location=sg.TITLE_LOCATION_TOP,
-              vertical_alignment="top", font='Arial 10 bold'),
+              vertical_alignment="top", font='Arial 10 bold', expand_y = True),
      sg.Frame('Input Parameters', layout_input_parameters,  title_location=sg.TITLE_LOCATION_TOP,
-              vertical_alignment="top", font='Arial 10 bold'),
+              vertical_alignment="top", font='Arial 10 bold', expand_y = True),
      sg.Frame('Analysis Parameters', layout_analysis_parameters, title_location=sg.TITLE_LOCATION_TOP,
-              vertical_alignment="top", font='Arial 10 bold')],
+              vertical_alignment="top", font='Arial 10 bold', expand_y = True)],
 ]
 # LAYOUT FRAME LEFT - INPUTS
 layout_frame_ImagesL = [
     [sg.Frame("Interferogram (Target)", layout_frame_ImgSample, title_location=sg.TITLE_LOCATION_TOP,
-              font='Arial 12 bold', element_justification='c', expand_x = True, expand_y = True)],
+              font='Arial 12 bold', element_justification='c', expand_x = True)],
 ]
 # LAYOUT FRAME RIGHT - INPUTS AND APPLY
 layout_frame_ImagesR = [
     [sg.Frame("Interferogram (Ref.)", layout_frame_ImgReference, title_location=sg.TITLE_LOCATION_TOP,
-              element_justification='c', vertical_alignment="top", font='Arial 12 bold', expand_x = True, expand_y = True)],
-    [sg.Text('')],[sg.Text('')],
+              element_justification='c', vertical_alignment="top", font='Arial 12 bold', expand_x = True)],
+
     [sg.Button('Analyse Data', size=(30, 6), font='Arial 12 bold', disabled=True, button_color='black', expand_x = True)],
     [sg.Button('Clear', size=(30, 2), button_color='gray', font='Arial 10 bold', expand_x = True)]
 ]
 # lAYOUT GLOBAL INPUTS
 layout_frame_Images = [
-    [sg.Column(layout_frame_ImagesL, element_justification='c', expand_x = True, expand_y = True),
-     sg.Column(layout_frame_ImagesR, element_justification='c', expand_x = True, expand_y = True)],
+    [sg.Column(layout_frame_ImagesL, element_justification='c', expand_x = True ),
+     sg.Column(layout_frame_ImagesR, element_justification='c', expand_x = True)],
     [sg.Frame("Options", layout_frame_Options, title_location=sg.TITLE_LOCATION_TOP_LEFT,
-              element_justification='c', font='Arial 12 bold', expand_x=True)],
+              element_justification='c', font='Arial 12 bold', expand_x=True, expand_y=True)],
 ]
 # LAYOUT 1D OPTIONS PLOT
 layout_frame_plot1D = [
@@ -242,7 +245,7 @@ layout_frame_plot1D = [
      sg.Input(pos2, size=(4, 1), key='-pos2-', enable_events=True),
      sg.Checkbox('Prof. 3 (µm)', default=False, key='-checkpos3-',enable_events=True),
      sg.Input(pos3, size=(4, 1), key='-pos3-', enable_events=True)],
-    [sg.Slider(key='sliderh', range=(0, 490), orientation='h', size=(400, 20), default_value=0,
+    [sg.Slider(key='sliderh', range=(0, 100), orientation='h', default_value=0,
                enable_events=True, expand_x = True)]
 ]
 # LAYOUT STAGES OF THE TREATMENT
@@ -257,8 +260,8 @@ layout_frame_Steps = [
 layout_frame_Result = [
     [sg.Frame('Stages', layout_frame_Steps, title_location=sg.TITLE_LOCATION_TOP_LEFT,
               key='framesteps', font='Arial 10 bold', expand_x = True, element_justification='c')],
-    [sg.Button('1D Profile', size=(16, 1), font='Arial 10 bold', disabled=True),
-     sg.Button('2D Profile', size=(16, 1), font='Arial 10 bold', disabled=True),
+    [sg.Button('1D Profile', size=(16, 2), font='Arial 10 bold', disabled=True),
+     sg.Button('2D Profile', size=(16, 2), font='Arial 10 bold', disabled=True),
      sg.Checkbox('Unc. Measurement', default=False, key='-checkstd-', enable_events=True),
      ],
     [sg.Canvas(key='canvasabel', size=size3, background_color='black', expand_x = True, expand_y = True)],
@@ -267,15 +270,14 @@ layout_frame_Result = [
      sg.Text('Colormap :'),
      sg.Combo(cmapIAS, default_value='default', key='-cmapcombo-',
               enable_events=True)],
-    [sg.Frame('1D Profile (Axisymmetry)', layout_frame_plot1D, size=(490, 100),
-              title_location=sg.TITLE_LOCATION_TOP_LEFT,
+    [sg.Frame('1D Profile (Axisymmetry)', layout_frame_plot1D, title_location=sg.TITLE_LOCATION_TOP_LEFT,
               visible=True, key='frame1d', font='Arial 10', expand_x = True)],
 ]
 # lAYOUT GLOBAL
 layout = [
-    [sg.Frame("Interferograms", layout_frame_Images,size = (int(0.50*WINwidth), int(0.90*WINheight)), font='Arial 12 bold', expand_x = True, expand_y = True),
-     sg.Frame("Target Profile", layout_frame_Result, size = (int(0.40*WINwidth), int(0.90*WINheight)), title_location=sg.TITLE_LOCATION_TOP,
-              font='Arial 12 bold', expand_x = True, expand_y = True)],
+    [sg.Frame("Interferograms", layout_frame_Images,size = (int(0.55*WINwidth), int(WINheight)), font='Arial 12 bold', expand_x = True, element_justification='c'),
+     sg.Frame("Target Profile", layout_frame_Result, size = (int(0.45*WINwidth), int(WINheight)), title_location=sg.TITLE_LOCATION_TOP,
+              font='Arial 12 bold', expand_x = True, element_justification='c')],
 ]
 ######################################################################################################################
 window = sg.Window(NameVersion, layout, margins=(5, 5), finalize=True, resizable=True)
