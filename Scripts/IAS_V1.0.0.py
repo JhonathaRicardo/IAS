@@ -1,7 +1,7 @@
-# Software: Interferometry Analysis - Gas Jet - ARMANDO'S BETA(Version 3.0.1)
+# Software: Interferometry Analysis Software (Version 1.0.0)
 # Authors: Jhonatha Ricardo dos Santos, Armando Zuffi, Ricardo Edgul Samad, Nilson Dias Vieira Junior
 # Python 3.11
-# Last update: 2024_08_14
+# Last update: 2024_08_28
 
 # LYBRARIES
 # The Python Standard Library
@@ -30,9 +30,9 @@ from scipy.signal import peak_widths
 from PIL import Image, UnidentifiedImageError
 from skimage.restoration import unwrap_phase
 from skimage.registration import phase_cross_correlation
-#
-NameVersion = "Interferometry Analysis Software (Version 3.0.0)"
-#
+#####################################################################
+NameVersion = "Interferometry Analysis Software (Version 1.0.0)"
+#####################################################################
 # Matplotlib Tk style
 matplotlib.use('TkAgg')
 warnings.filterwarnings("ignore")
@@ -67,6 +67,8 @@ tmp_file_plot = 'temp_plot_abel.png'
 
 ###############################################################################################
 # INITIAL PARAMETERS
+# Abel method
+abel_method = 'three_point'
 # Image paths
 path1 = ''
 path2 = ''
@@ -77,7 +79,6 @@ path_files2 = []
 lambda0 = '395'  # nm
 unc_lambda0 = '0'
 factor = '1.000'  # factor um/pixel
-unc_factor = '0.001'
 polargas = '1.710'  # for N2 gas in A^3
 sigma_gfilter = '0'  # sigma of gauss function
 sigma_gblur = '5'  # sigma of gaussian blur
@@ -88,6 +89,8 @@ base_ref = '5'
 # Image parameters
 h_prof = -1.0  # heigth null
 rotate_degree = 0.0  # angle to image rotation
+# Absolute error value = 0.5 pixel
+abs_std = 0.5
 #FFT Freq
 fpv = np.array([0, 0])
 fph = np.array([0, 0])
@@ -105,7 +108,7 @@ cmapIAS = ['default','default_r', 'rainbow', 'rainbow_r', 'gist_rainbow', 'gist_
 #ScreenDimension
 SCNwidth, SCNheight = SCNsize = sg.Window.get_screen_size()
 ##############################################################################################
-#WINDOW DIMENSION (Default = 90%)
+#WINDOW DIMENSION (Default = 80%)
 WINwidth, WINheight = WINsize = (int(0.80*SCNwidth), int(0.80*SCNheight))
 ##############################################################################################
 # Images Dimensions
@@ -127,18 +130,16 @@ Building frames for main windows
 
 # LAYOUT INTERFEROMETER IMAGE
 layout_frame_ImgSample = [
-    [sg.Text('')],
     [sg.Image(size=size, background_color='black', key='image1',enable_events=True)],
     [sg.Input(expand_x=True, disabled=True, key='file1', visible='True')],
     [sg.Button('Open File(s)', font='Arial 10 bold'),
      sg.Button('Rotate (°)', visible=True, font='Arial 10 bold', disabled=True),
      sg.Input('0', size=(5, 1), key='-DEGREE-', enable_events=True),
      sg.Text('Original Size (w,h):'),
-     sg.Text('', key='-scale1-')],
+     sg.Text(text=size, key='-scale1-')],
 ]
 # LAYOUT REFERENCE IMAGE
 layout_frame_ImgReference = [
-    [sg.Text('')],
     [sg.Image(size=size2, background_color='black',
               key='image2', enable_events=True)],
     [sg.Input(expand_x=True, disabled=True, key='file2', visible='True')],
@@ -170,13 +171,11 @@ layout_frame_gas = [
 layout_input_parameters = [
     [sg.Text('Scaling Factor (µm/pixel):         '),
      sg.Input(factor, size=(6, 1), key='-factor-', enable_events=True)],
-    [sg.Text('Unc. Scaling Factor (µm/pixel): '),
-     sg.Input(unc_factor, size=(6, 1), key='-unc_factor-', enable_events=True)],
     [sg.Text('')],
-    [sg.Text('Laser Wavelength λ (nm):          '),
+    [sg.Text('Laser Wavelength λ (nm):         '),
      sg.Input(lambda0, size=(6, 1), key='-lambda0-', enable_events=True)],
-    [sg.Text('Wavelength FWHM Δλ (nm):     '),
-     sg.Input(unc_lambda0, size=(6, 1), key='-unclambda0-', enable_events=True)],
+    [sg.Text('Wavelength FWHM Δλ (nm):    '),
+     sg.Input(unc_lambda0, size=(6, 1), key='-unclambda0-', enable_events=True)],[sg.Text('')],
     [sg.Frame('Gas/Vapor', layout_frame_gas, title_location=sg.TITLE_LOCATION_TOP_LEFT,
               key='framegas',vertical_alignment="left", font='Arial 10 bold', expand_x = True)],
 
@@ -196,7 +195,7 @@ layout_frame_freq = [
 # LAYOUT INPUT MEASUREMENT PARAMETERS
 layout_analysis_parameters = [
     [sg.Frame('Filter Freq.', layout_frame_freq, title_location=sg.TITLE_LOCATION_TOP_LEFT,
-              key='framesteps', font='Arial 10 bold')],
+              key='framesteps', font='Arial 10 bold')],[sg.Text('')],
     [sg.Text('Gaussian Blur σ (pixel):           '),
      sg.Spin([i for i in range(0, maxvalue_x // 2)], initial_value=sigma_gblur, size=(5, 1), key='-sigma_gblur-',
              enable_events=True)],
@@ -252,8 +251,8 @@ layout_frame_plot1D = [
 layout_frame_Steps = [
     [sg.Radio('Frequency \nDomain', "radiostg", default=False, key='fftradio', enable_events=True),
      sg.Radio('Gaussian \nFilter', 'radiostg', default=False, key='filterradio', enable_events=True),
-     sg.Radio('Acc. \nPhase-shift', "radiostg", default=True, key='phaseradio', enable_events=True),
-     sg.Radio('Radial \nPhase-shift', "radiostg", default=False, key='abelradio', enable_events=True),
+     sg.Radio('Acc. \nPhase-shift (ϕ)', "radiostg", default=True, key='phaseradio', enable_events=True),
+     sg.Radio('Radial \nPhase-shift (φ)', "radiostg", default=False, key='abelradio', enable_events=True),
      sg.Radio('Density \nProfile', "radiostg", default=False, key='densradio', enable_events=True)],
 ]
 # LAYOUT GLOBAL OUTPUTS
@@ -277,7 +276,7 @@ layout_frame_Result = [
 layout = [
     [sg.Frame("Interferograms", layout_frame_Images,size = (int(0.55*WINwidth), int(WINheight)), font='Arial 12 bold', expand_x = True, element_justification='c'),
      sg.Frame("Target Profile", layout_frame_Result, size = (int(0.45*WINwidth), int(WINheight)), title_location=sg.TITLE_LOCATION_TOP,
-              font='Arial 12 bold', expand_x = True, element_justification='c')],
+              font='Arial 12 bold', expand_x = True)],
 ]
 ######################################################################################################################
 window = sg.Window(NameVersion, layout, margins=(5, 5), finalize=True, resizable=True)
@@ -301,7 +300,7 @@ window['-BEGIN_Y-'].bind('<FocusOut>', 'FocusOut')
 window['-END_Y-'].bind('<FocusOut>', 'FocusOut')
 window['frame1d'].update(visible=False)
 #EVENTS
-window.move(0, 0)
+window.move(int((SCNwidth-WINwidth)/2), int((SCNheight-WINheight)/2))
 
 while True:
     event, values = window.read()
@@ -346,13 +345,14 @@ while True:
         if '_temp.png' in path1:
             os.remove(path1)
             os.remove(path2)
+
         window['Rotate (°)'].update(disabled=True)
         window['-DEGREE-'].update(visible=True)
         window['Analyse Data'].update(disabled=True)
 
         # Disable specific buttons and frames for 2D analysis
         window['Save Data'].update(disabled=True)
-        window['Save Plot'].update(disabled=True)
+        window['Save Image'].update(disabled=True)
         window['frame1d'].update(visible=False)
         window['2D Profile'].update(disabled=True)
         window['1D Profile'].update(disabled=True)
@@ -477,7 +477,7 @@ while True:
         window['-axisymm_pos-'].update('0')
         window['-sigma_gfilter-'].update('0')
         # Enable buttons
-        if (len(path_files) == 0) or (len(path_files2) == 0):
+        if (len(path_files) != 0)  and (len(path_files2) != 0):
             window['Rotate (°)'].update(disabled=False)
             window['-DEGREE-'].update(visible=True)
             window['Analyse Data'].update(disabled=False)
@@ -543,7 +543,7 @@ while True:
         window['-sigma_gfilter-'].update('0')
 
         # Enable buttons
-        if (len(path_files) == 0) or (len(path_files2) == 0):
+        if (len(path_files) != 0) and (len(path_files2) != 0):
             window['Rotate (°)'].update(disabled=False)
             window['-DEGREE-'].update(visible=True)
             window['Analyse Data'].update(disabled=False)
@@ -623,7 +623,6 @@ while True:
             base_ref = float(get_value('-base_ref-', values)) / 100
             # get conversion factor in meters/pixel
             factor = float(get_value('-factor-', values)) * 1e-6
-            unc_factor = float(get_value('-unc_factor-', values)) * 1e-6
             # Manual definition of the filter position
             centerfh = int(get_value("-centerfh-", values))
             centerfv = int(get_value("-centerfv-", values))
@@ -649,7 +648,7 @@ while True:
             if values['-comboaxisymm-'] == 'None(Hor.)' or values['-comboaxisymm-'] == 'None(Vert.)':
                 axis_pos = 0
                 thick_tgt =  float(get_value('-axisymm_pos-', values))*1e-6/factor
-                std_thick_tgt = thick_tgt/factor*unc_factor
+                std_thick_tgt = abs_std*thick_tgt/factor
             else:
                 axis_pos = int(get_value('-axisymm_pos-', values))  # pixel
                 thick_tgt = 0
@@ -757,21 +756,16 @@ while True:
             disp = np.sqrt(disp_xy[0] ** 2 + disp_xy[1] ** 2)
 
             # Creating 2D array for fringes width distribution
-            dist_fw, std_fw = fringes_width(intref, fang_deg)
-
-            # Intendity Distribution for std of phase
-            distI1, std_I1 = baseline2D_gas(np.asfarray(intref), base_ref)
-            distI2, std_I2 = baseline2D_gas(np.asfarray(inttgt), base_ref)
-
-            func_distI = np.sqrt((np.mean(distI1) * (distI1 + distI2)) / (2 * distI1 * distI2))
-
+            fdist_tgt, std_fdist_tgt = fringes_width(inttgt, int(fang_deg))
+            fdist_ref, std_fdist_ref = fringes_width(intref, int(fang_deg))
             try:
-                std_phasemap_i = ((np.pi * disp) / (2 * dist_fw)) * (
-                    np.nan_to_num(func_distI, posinf=np.min(func_distI)))
+                std_phasemap_i = np.sqrt(np.square(abs_std / fdist_tgt) + np.square(abs_std / fdist_ref) + \
+                                 np.square(disp /fdist_tgt))
 
             except:
-                std_phasemap_i = np.zeros(np.shape(intref))
 
+                std_phasemap_i = np.zeros(np.shape(intref))
+            #breakpoint()
             '''
             ################################################################################
             Applying Inverse Abel Transform (IAT):
@@ -811,17 +805,17 @@ while True:
 
             '''
             ##################################################################################################
-            BREAKPOINT FOR PHASE/BASELINE2D ANALISE
+            #BREAKPOINT FOR TESTS
             ##################################################################################################
-            Breakpoint()
+            #Breakpoint()
             #.dat Files for manuscript
-            uwphasemap = (gaussian_filter(uwphasemap, sigma=sigma))
-            baselinemap = (gaussian_filter(baselinemap, sigma=sigma))
-            resultphase = (gaussian_filter(resultphase, sigma=sigma))
+            fdist_tgt_print = (gaussian_filter(fdist_tgt, sigma=5))
+            fdist_ref_print = (gaussian_filter(fdist_ref, sigma=5))
+            #resultphase = (gaussian_filter(resultphase, sigma=sigma))
 
-            np.savetxt('phasemap+bg pos00.dat', uwphasemap, fmt='%.3e')
-            np.savetxt('bg pos00.dat', baselinemap, fmt='%.3e')
-            np.savetxt('phasemap-bg pos00.dat', resultphase, fmt='%.3e')
+            np.savetxt('fdist_tgt.dat', fdist_tgt_print, fmt='%.3e')
+            np.savetxt('fdist_ref.dat', fdist_ref_print, fmt='%.3e')
+            #np.savetxt('phasemap-bg pos00.dat', resultphase, fmt='%.3e')
             ##################################################################################################
             '''
             #######################################################################################################
@@ -925,13 +919,13 @@ while True:
                 window['-axisymm_pos-'].update(axis_pos)
 
                 try:
-                    raxis = np.abs(np.arange(-np.shape(phasemap_symm)[1] / 2, np.shape(phasemap_symm)[1] / 2, 1))
 
                     # Applying inverse Abel Transform
                     phase_abel0 = abel.Transform((phasemap_symm), symmetry_axis=0, direction='inverse',
-                                                 method='onion_peeling').transform
+                                                 method=abel_method).transform
 
-                    std_abel0 = std_phasemap_symm / (np.pi * np.max(raxis) * np.sqrt(1 - raxis / np.max(raxis)))
+                    std_abel0 = abel.Transform((std_phasemap_symm), symmetry_axis=0, direction='inverse',
+                                                 method=abel_method).transform
 
                 except:
 
@@ -953,16 +947,18 @@ while True:
                 std_abel = std_abel0[:, side_cut: -side_cut]
 
                 norm_phasemap = np.zeros(np.shape(phase_abel))
+
                 for k in range(0, rangeh0):
+
                     try:
-                        norm_phasemap[k] = phasemap_symm[k, side_cut: -side_cut] \
+                        norm_phasemap[k] = phasemap_symm[k, side_cut: -side_cut]\
                                            * np.max(abs(phase_abel[k, :])) \
                                            / np.max(abs(phasemap_symm[k, side_cut: -side_cut]))
+
                     except:
                         norm_phasemap[k] = np.zeros(np.shape(phase_abel[k, :]))
 
                 std_abelmap_2 = np.sqrt(np.square(phase_abel - norm_phasemap))
-
 
                 # new matrix size for plot
                 rangeh, rangev = np.shape(phase_abel)
@@ -979,8 +975,7 @@ while True:
             # STANDARD DEVIATION OF PHASE
             #######################################################################################
             # Contribution 1: measurement interferogram
-            std_phase1 = np.sqrt(np.square(std_abel / factor) + \
-                                 np.square(phase_abel * unc_factor / factor ** 2))  # rad/m
+            std_phase1 = np.sqrt(np.square(std_abel / factor))  # rad/m
 
             # Contribution 2: Phase
             std_phase2 = abs(std_abelmap_2 / factor)  # rad/m
@@ -1120,7 +1115,7 @@ while True:
                 maxval = 0
                 maxstd = 0
 
-            strmax = r'$\Delta\phi_{max}=%.3f \pm %.3f$' % (maxval, maxstd)
+            strmax = r'$\phi_{max}=%.3f \pm %.3f$' % (maxval, maxstd)
 
             if values['-checkstd-'] == False:
                 matrix_plot = tgt_phasemap_mean
@@ -1142,7 +1137,7 @@ while True:
                 maxval = 0
                 maxstd = 0
 
-            strmax = r'$\Delta\phi_{r. max}=%.5f \pm %.5f$' % (maxval, maxstd)
+            strmax = r'$\varphi_{r.max}=%.5f \pm %.5f$' % (maxval, maxstd)
             if values['-checkstd-'] == False:
                 matrix_plot = tgt_abelmap_mean
             else:
@@ -1174,12 +1169,12 @@ while True:
             window['sliderh'].update(range=(0, rangev - 1), value=indmax[1])
 
         # Creating plot figure parameters
-        fig, ax1 = plt.subplots(figsize=(4.9, 4))
+        fig, ax1 = plt.subplots(figsize=(6, 5))
 
         #
         if values['filterradio'] == True or values['fftradio'] == True:
-            ax1.set_xlabel('$\\nu_x\hspace{.5}(arb.u.)$', fontsize=12)
-            ax1.set_ylabel('$\\nu_y\hspace{.5}(arb.u.)$', fontsize=12)
+            ax1.set_xlabel(r'$\nu_x\hspace{.5}(arb.u.)$', fontsize=12)
+            ax1.set_ylabel(r'$\nu_y\hspace{.5}(arb.u.)$', fontsize=12)
             ax1.imshow(matrix_plot, cmap='gray')
             if values['fftradio'] == True:
                 if centerfh != 0:
@@ -1195,16 +1190,16 @@ while True:
             # X and Y labels
             if values['-comboaxisymm-'] == 'Horizontal' and values['phaseradio'] == False:
                 axisext = [0, x_max, -y_max / 2, y_max / 2]
-                xlabel = '$x\hspace{.5}(\mu m)$'
-                ylabel = '$r\hspace{.5}(\mu m)$'
+                xlabel = r'$x\hspace{.5}(\mu m)$'
+                ylabel = r'$r\hspace{.5}(\mu m)$'
             elif values['-comboaxisymm-'] == 'Vertical' and values['phaseradio'] == False:
                 axisext = [-x_max / 2, x_max / 2, 0, y_max]
-                xlabel = '$r\hspace{.5}(\mu m)$'
-                ylabel = '$y\hspace{.5}(\mu m)$'
+                xlabel = r'$r\hspace{.5}(\mu m)$'
+                ylabel = r'$y\hspace{.5}(\mu m)$'
             else:
                 axisext = [0, x_max, 0, y_max]
-                xlabel = '$x\hspace{.5}(\mu m)$'
-                ylabel = '$y\hspace{.5}(\mu m)$'
+                xlabel = r'$x\hspace{.5}(\mu m)$'
+                ylabel = r'$y\hspace{.5}(\mu m)$'
 
             cax = divider.append_axes("right", size="5%", pad=0.05)
             abel_plot = ax1.imshow(matrix_plot, extent=axisext, cmap=newcmp)
@@ -1215,9 +1210,9 @@ while True:
 
             if values['phaseradio'] == True:
                 if values['-checkstd-'] == False:
-                    cb1.set_label(label='$\Delta\phi\hspace{.5} (rad)$', size=12, weight='bold')
+                    cb1.set_label(label='$\phi\hspace{.5} (rad)$', size=12, weight='bold')
                 else:
-                    cb1.set_label(label='$\sigma_{\Delta\phi}\hspace{.5} (rad)$', size=12, weight='bold')
+                    cb1.set_label(label='$\sigma_{\phi}\hspace{.5} (rad)$', size=12, weight='bold')
                 if values['-comboaxisymm-'] == 'Horizontal':
                     ax1.axhline(y=axis_pos * factor * 1e6, lw=1, ls='--', alpha=0.5, color='black')
                 elif values['-comboaxisymm-'] == 'Vertical':
@@ -1225,15 +1220,15 @@ while True:
 
             elif values['densradio'] == True:
                 if values['-checkstd-'] == False:
-                    cb1.set_label(label='$\\rho\hspace{.5} (cm^{-3})$', size=12, weight='bold')
+                    cb1.set_label(label=r'$\rho\hspace{.5} (cm^{-3})$', size=12, weight='bold')
                 else:
-                    cb1.set_label(label='$\sigma_{\\rho}\hspace{.5} (cm^{-3})$', size=12, weight='bold')
+                    cb1.set_label(label=r'$\sigma_{\rho}\hspace{.5} (cm^{-3})$', size=12, weight='bold')
 
             elif values['abelradio'] == True:
                 if values['-checkstd-'] == False:
-                    cb1.set_label(label='$\Delta\phi_{r}\hspace{.5} (rad/ \mu m)$', size=12, weight='bold')
+                    cb1.set_label(label=r'$\varphi_r\hspace{.5} (rad/ \mu m)$', size=12, weight='bold')
                 else:
-                    cb1.set_label(label='$\sigma_{\Delta\phi_{r}}\hspace{.5} (rad/ \mu m)$', size=12, weight='bold')
+                    cb1.set_label(label=r'$\sigma_{\varphi_{r}}\hspace{.5} (rad/ \mu m)$', size=12, weight='bold')
 
         fig.tight_layout(pad=2)
         fig_canvas_agg = draw_figure(window['canvasabel'].TKCanvas, fig)
@@ -1288,7 +1283,7 @@ while True:
                 maxval = 0
                 maxstd = 0
 
-            strmax = r'$\Delta\phi_{max}=%.3f \pm %.3f$' % (maxval, maxstd)
+            strmax = r'$\phi_{max}=%.3f \pm %.3f$' % (maxval, maxstd)
 
             if values['-checkstd-'] == False:
                 matrix_plot = tgt_phasemap_mean
@@ -1310,7 +1305,7 @@ while True:
                 maxval = 0
                 maxstd = 0
 
-            strmax = r'$\Delta\phi_{r. max}=%.5f \pm %.5f$' % (maxval, maxstd)
+            strmax = r'$\varphi_{r.max}=%.5f \pm %.5f$' % (maxval, maxstd)
             if values['-checkstd-'] == False:
                 matrix_plot = tgt_abelmap_mean
             else:
@@ -1338,7 +1333,7 @@ while True:
             plt.close('all')
 
             # Instead of plt.show
-            fig, ax1 = plt.subplots(figsize=(4.9, 4))
+            fig, ax1 = plt.subplots(figsize=(6, 5))
             ########################################################################################################
             if values['filterradio'] == True or values['fftradio'] == True:
                 ax1.set_xlabel('$\\nu_x\hspace{.5}(arb.u.)$', fontsize=12)
@@ -1378,9 +1373,9 @@ while True:
 
                 if values['phaseradio'] == True:
                     if values['-checkstd-'] == False:
-                        cb1.set_label(label='$\Delta\phi\hspace{.5} (rad)$', size=12, weight='bold')
+                        cb1.set_label(label=r'$\phi\hspace{.5} (rad)$', size=12, weight='bold')
                     else:
-                        cb1.set_label(label='$\sigma_{\Delta\phi}\hspace{.5} (rad)$', size=12, weight='bold')
+                        cb1.set_label(label=r'$\sigma_{\phi}\hspace{.5} (rad)$', size=12, weight='bold')
                     if values['-comboaxisymm-'] == 'Horizontal':
                         ax1.axhline(y=axis_pos * factor * 1e6, lw=1, ls='--', alpha=0.5, color='black')
                     elif values['-comboaxisymm-'] == 'Vertical':
@@ -1388,15 +1383,15 @@ while True:
 
                 elif values['densradio'] == True:
                     if values['-checkstd-'] == False:
-                        cb1.set_label(label='$\\rho\hspace{.5} (cm^{-3})$', size=12, weight='bold')
+                        cb1.set_label(label=r'$\rho\hspace{.5} (cm^{-3})$', size=12, weight='bold')
                     else:
-                        cb1.set_label(label='$\sigma_{\\rho}\hspace{.5} (cm^{-3})$', size=12, weight='bold')
+                        cb1.set_label(label=r'$\sigma_{\rho}\hspace{.5} (cm^{-3})$', size=12, weight='bold')
 
                 elif values['abelradio'] == True:
                     if values['-checkstd-'] == False:
-                        cb1.set_label(label='$\Delta\phi_{r}\hspace{.5} (rad/ \mu m)$', size=12, weight='bold')
+                        cb1.set_label(label=r'$\varphi_{r}\hspace{.5} (rad/ \mu m)$', size=12, weight='bold')
                     else:
-                        cb1.set_label(label='$\sigma_{\Delta\phi_{r}}\hspace{.5} (rad/ \mu m)$', size=12, weight='bold')
+                        cb1.set_label(label=r'$\sigma_{\varphi_{r}}\hspace{.5} (rad/ \mu m)$', size=12, weight='bold')
             ########################################################################################################
             fig.tight_layout(pad=2)
             fig_canvas_agg = draw_figure(window['canvasabel'].TKCanvas, fig)
@@ -1460,14 +1455,15 @@ while True:
 
             if values['filterradio'] == True or values['fftradio'] == True:
                 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(4.9, 4))
-                ax1.plot(np.arange(0, rangev), summapv, label='FFT V. Sum', lw=2, color="gray")
-                ax2.plot(np.arange(0, rangeh), summaph, label='FFT H. Sum', lw=2, color="gray")
-
+                ax1.plot(np.arange(0, rangev), summapv, label=r'$\sum_{\nu_{y}} \hspace{.5} ln|\hat{I}|$', lw=2, color="gray")
+                ax2.plot(np.arange(0, rangeh), summaph, label=r'$\sum_{\nu_{x}} \hspace{.5} ln|\hat{I}|$', lw=2, color="gray")
+                ax1.set_xlim(0, rangev)
+                ax2.set_xlim(0, rangeh)
                 if centerfv!=0:
-                    ax1.axvline(x=centerfv + sigma_gfilter, label='$\Delta\\nu$', lw=1, alpha=0.5, color='red')
+                    ax1.axvline(x=centerfv + sigma_gfilter, label=r'$\Delta\nu$', lw=1, alpha=0.5, color='red')
                     ax1.axvline(x=centerfv - sigma_gfilter, lw=1, alpha=0.5, color='red')
                 if centerfh != 0:
-                    ax2.axvline(x=centerfh + sigma_gfilter, label='$\Delta\\nu$', lw=1, alpha=0.5, color='red')
+                    ax2.axvline(x=centerfh + sigma_gfilter, label=r'$\Delta\nu$', lw=1, alpha=0.5, color='red')
                     ax2.axvline(x=centerfh - sigma_gfilter, lw=1, alpha=0.5, color='red')
 
                 if values['filterradio'] == True:
@@ -1478,9 +1474,9 @@ while True:
                     if centerfh != 0:
                         ax2.scatter(fph, [summaph[i] for i in fph], color='red', marker='^', label='$\\nu_y$')
                         [ax2.text(x, summaph[x], '%d' % x) for x in fph]
-                ax1.set_ylabel('$Relative\hspace{.5}Intensity\hspace{.5} (a.u.)$', fontsize=10)
-                ax2.set_ylabel('$Relative\hspace{.5}Intensity\hspace{.5} (a.u.)$', fontsize=10)
-                ax2.set_xlabel('$Frequency\hspace{.5}\\nu\hspace{.5}(pixel)$', fontsize=10)
+                ax1.set_ylabel(r'$Relative\hspace{.5}Intensity\hspace{.5} (a.u.)$', fontsize=10)
+                ax2.set_ylabel(r'$Relative\hspace{.5}Intensity\hspace{.5} (a.u.)$', fontsize=10)
+                ax2.set_xlabel(r'$Frequency\hspace{.5}\nu\hspace{.5}(pixel)$', fontsize=10)
                 ax2.set_ylim(bottom=0.)
                 ax2.legend(loc='upper center', fancybox=True, shadow=True)
                 ax2.grid(True)
@@ -1527,16 +1523,19 @@ while True:
                 pos3 = int(h_prof3 / (factor * 1e6))
 
                 # Creating plot parameters
-                fig, ax1 = plt.subplots(figsize=(4.9, 4))
+                fig, ax1 = plt.subplots(figsize=(6, 5))
 
-                if values['-comboaxisymm-'] == 'Horizontal': xlabel = '$x\hspace{.5}(\mu m)$'
-                elif values['-comboaxisymm-'] == 'Vertical': xlabel = '$r\hspace{.5}(\mu m)$'
-                else: xlabel = '$x\hspace{.5}(\mu m)$'
+                if values['-comboaxisymm-'] == 'Horizontal' or values['-comboaxisymm-'] == 'Vertical':
+                    xlabel = r'$r\hspace{.5}(\mu m)$'
+                elif values['-comboaxisymm-'] == 'None(Hor.)':
+                    xlabel = r'$y\hspace{.5}(\mu m)$'
+                else:
+                    xlabel = r'$x\hspace{.5}(\mu m)$'
 
                 ax1.set_xlabel(xlabel, fontsize=12)
 
                 if values['densradio'] == True:
-                    labelplot = '$%d \hspace{.5}\mu m$'
+                    labelplot = r'$\rho_{%d \hspace{.5}\mu m}$'
                     ax1.plot(raxis_um, array_plot, label=labelplot % h_prof, lw=2, color="blue")
                     ax1.set_ylabel(r'$\rho\hspace{.5} (cm^{-3})$', fontsize=12)
                     strmax = r'$\rho_{max}=%.2e (\pm %.1f\%%)$' % (np.max(array_plot), 100 * array_std[np.argmax(array_plot)] / np.max(array_plot))
@@ -1548,26 +1547,28 @@ while True:
                     except:
                         continue
                     if values['-checkstd-'] == True:
-                        ax1.errorbar(raxis_um, array_plot, yerr=array_std, label='$\sigma_{\\rho}$', alpha=0.2,
+                        ax1.errorbar(raxis_um, array_plot, yerr=array_std, label=r'$\sigma_{\rho}$', alpha=0.2,
                                      color="blue")
                         ax1.set_ylim(bottom=0.)
 
                 if values['abelradio'] == True:
-                    labelplot = '$(\Delta\phi_r)_{%d \hspace{.5}\mu m}$'
+                    labelplot = r'$(\varphi_r)_{%d \hspace{.5}\mu m}$'
                     ax1.plot(raxis_um, array_plot, label=labelplot % h_prof, lw=2, color="blue")
-                    ax1.set_ylabel('$\Delta\phi_{r}\hspace{.5} (rad/ \mu m)$', fontsize=12)
+                    ax1.set_ylabel(r'$\varphi_{r}\hspace{.5} (rad/ \mu m)$', fontsize=12)
                     if values['-checkstd-'] == True:
-                        ax1.plot(raxis_um, array_std, '--', label='$(\Delta\phi_{norm})_{%d \hspace{.5}\mu m}$' % h_prof,
+                        ax1.plot(raxis_um, array_std, '--', label=r'$(\phi_{norm})_{%d \hspace{.5}\mu m}$' % h_prof,
                                  lw=2, color="red")
                         ax1.fill_between(raxis_um, array_plot, array_std, color="orange", alpha=0.5,
-                                         label='$(\sigma_{Abel})_{%d}$' % h_prof)
+                                         label=r'$(\sigma_{Abel})_{%d}$' % h_prof)
+                        #ax1.errorbar(raxis_um, array_plot, yerr=array_std, label='$\sigma_{\Delta\phi}$', alpha=0.2,
+                                    #color="blue")
 
                 if values['phaseradio'] == True:
-                    labelplot = '$%d \hspace{.5}\mu m$'
+                    labelplot = r'$(\phi)_{%d \hspace{.5}\mu m}$'
                     ax1.plot(raxis_um, array_plot, label=labelplot % h_prof, lw=2, color="blue")
-                    ax1.set_ylabel('$\Delta\phi\hspace{.5} (rad)$', fontsize=12)
+                    ax1.set_ylabel(r'$\phi\hspace{.5} (rad)$', fontsize=12)
                     if values['-checkstd-'] == True:
-                        ax1.errorbar(raxis_um, array_plot, yerr=array_std, label='$\sigma_{\Delta\phi}$', alpha=0.2,
+                        ax1.errorbar(raxis_um, array_plot, yerr=array_std, label='$\sigma_{\phi}$', alpha=0.2,
                                      color="blue")
 
                 # Including new 1D density profile for another height from origin height position
