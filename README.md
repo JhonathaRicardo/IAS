@@ -1,4 +1,4 @@
-# <h1 align = "center"> Interferometry Analysis Software (IAS) (v.3.0.0)</h1>
+# <h1 align = "center"> Interferometry Analysis Software (IAS) (V.1.0.0)</h1>
 <p align="justify">
 Interferometry Analysis Software (IAS) is a dedicated tool for studying gas, vapor, and plasma jets. IAS uses a new algorithm and GUI to analyze interferograms. It can retrieve the accumulated phase shift and apply Abel inversion to estimate the density profile of targets (gas, vapor, or plasma).
 </p>
@@ -8,7 +8,7 @@ Interferometry Analysis Software (IAS) is a dedicated tool for studying gas, vap
 </p>
 
 ![License](https://img.shields.io/badge/license-MIT-green)
-![version](https://img.shields.io/badge/version-v.3.0.0-green)
+![version](https://img.shields.io/badge/version-v.1.0.0-green)
 ![status](https://img.shields.io/badge/status-under%20development-yellow)
 
 ## Summary
@@ -38,7 +38,7 @@ The *Interferometry Analysis Software (IAS)* was developed in Python 3.11. The u
 
 Users also can create a single .exe file using the [pyinstaller](https://pyinstaller.org/en/stable/) package through the following terminal command:
 
-<code>   pyinstaller --onefile -w IAS_V3.0.0.py                </code>
+<code>   pyinstaller --onefile -w IAS_V31.0.0.py                </code>
 
 Users who do not use Python IDEs can utilize the software through the executable file available for download [here](https://drive.google.com/file/d/1K_-3wm8TOzxROLyAc22AkRXlRvD3GjjI/view?usp=sharing)
 
@@ -90,12 +90,12 @@ The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferog
 | *Fig. 2. (a) Accumulated phase map of LIP in 3D with a non-linear background and the selected border (in gray) used to construct the isolated background map; (b) Accumulated phase map of LIP in 3D after removing the background.* |
     
 - ***6. [Input Parameteres]*** Frame to set the experimental parameters used to acquire the interferogram. These parameters are:
-  - ***[Scaling Factor]*** and ***[Uncertainty Scaling Factor]*** Interferogram scale in micrometers/pixel (*default is 1.000&plusmn;0.001 &nu;m/pixel*).
+  - ***[Scaling Factor]*** Interferogram scale in micrometers/pixel (*default is 1.000 &nu;m/pixel*).
   - ***[Laser Wavelength]*** (&lambda;) and ***[Laser FHWM]*** (&Delta;&lambda;) in nm (*default is 395&plusmn;0 nm, respectively*).
-  - ***[Gas/Vapor]*** This frame is able only to Gas/Vapor targets.
+  - ***[Gas/Vapor]*** This frame can only reach Gas/Vapor targets.
     - The list box of some types of gases: *H<sub>2</sub>*, *N<sub>2</sub>*, *He* and *Ar* (*default is *) and ***[Polarizability]*** (&alpha;) in angstrom³. This parameter usually refers to the tendency of matter to acquire an electric dipole moment when subjected to an electric field (*default is 1.710 A³ for N<sub>2</sub>*).
     > **Note**
-    > The polarizability value is automatically filled in after selecting the gas type. If the user wants to use gases not yet listed, the gas/vapor polarizability value can be entered manually.
+    > The polarizability value is automatically filled in after selecting the gas type. If the user wants to use gases that are not yet listed, the gas/vapor polarizability value can be entered manually.
 
 - ***7. [Analysis Parameters]*** Parameters frame to analyze the interferogram.
   - ***[FFT Filter Frequency]***:  The ***[Vert. (&nu;<sub>x</sub>)]*** and ***[Hor. (&nu;<sub>x</sub>)]*** parameters are set automatically by the algorithm and these positions define which frequencies (&pm&nu;<sub>x</sub>) and (&pm&nu;<sub>y</sub>) (*Horizontal  Vertical*) will be used to apply the Inverse Fourier Transform and build the phase map of the target.
@@ -104,12 +104,12 @@ The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferog
   - ***[Gaussian Blur]*** (&sigma;<sub>blur</sub>) Spread of the bi-dimensional Gaussian image filter. The standard deviation of the Gaussian filter ($\sigma$) defined by the user is equal for all axes. The ***[Gaussian Blur]*** is used to improve the target symmetry.
     > **Note:** The (&sigma;<sub>blur</sub>) is automatically calculated from FFT maps, but users can set this value manually. 
   
-  - ***[Axisymmetric Orientation]*** Definition of the axis of symmetry (or axisymmetric) to apply the Inverse Abel Transform. The axisymmetric can be Horizontal or Vertical (*default is Horizontal for Plasmas and Vertical for Gas/Vapor targets*) and the ***[Axisymmetric Position]*** is a pixel position on the accumulated phase map to apply the Abel inversion. This position is only able for Horizontal or Vertical orientations. For *None (Hor. our Vert)* orientations the IAS code doesn't apply Abel Inversion. In this case, the density of the target is retrieved by approximation [[15]](#reference).
+  - ***[Axisymmetric Orientation]*** Definition of the axis of symmetry (or axisymmetric) to apply the Inverse Abel Transform. The axisymmetric can be Horizontal or Vertical (*default is Horizontal for Plasmas and Vertical for Gas/Vapor targets*) and the ***[Axisymmetric Position]*** is a pixel position on the accumulated phase map to apply the Abel inversion. This position is only for horizontal or vertical orientations. For *None (Hor. our Vert)* orientations the IAS code doesn't apply Abel Inversion. In this case, the density of the target is retrieved by approximation [[15]](#reference).
     
 
 ### Target Profile
 - ***8. [Stages]:*** Stages frame allows the visualization of each result of the algorithm.
-  - ***[Fourier Transform]*** This FFT Frequency map (Fig. 3.a) is built from the Fourier Transform of the target interferogram. The frequency positions highlighted in FFT Frequency map are automatically identified from pixel columns sum (vertical) and pixel lines sum (horizontal). The selected frequency is marked with a red line over a pixel line (or column) identifying the (&pm&nu;<sub>x</sub>) and (&pm&nu;<sub>y</sub>). 
+  - ***[Fourier Transform]*** This FFT Frequency map (Fig. 3.a) is built from the Fourier Transform of the target interferogram. The frequency positions highlighted in the FFT Frequency map are automatically identified from pixel columns sum (vertical) and pixel lines sum (horizontal). The selected frequency is marked with a red line over a pixel line (or column) identifying the (&pm&nu;<sub>x</sub>) and (&pm&nu;<sub>y</sub>). 
     > **Note:** The user can change this ***[Vert. (&nu;<sub>x</sub>)]*** and ***[Hor. (&nu;<sub>x</sub>)]*** manually. But, the IAS code automatically identifies the frequencies when values equal *'0'*. 
   
   - ***[Gaussian Filter]*** The Gaussian filter map (Fig. 3.b) is applied to generate the phase map. This filter is built from the selected frequencies &pm&nu;<sub>x</sub>, &pm&nu;<sub>y</sub> and the range frequency &Delta;&nu;(Fig. 3.d).  
@@ -140,7 +140,7 @@ For the next three steps, users have the option of viewing the 2D maps or 1D cur
 
 - ***9. [1D Profile]*** This button enables a 1D frame (*Item 15 in Fig. 1*) with options for the user to visualize the curves of each selected stage for different positions on the chosen symmetry axis.
 - ***10. [2D Profile]*** This button enables the visualization of each ***[Stage]*** in 2D images.
-- ***11. [Uncertainty of Measurement]*** This checkbox enables the visualization of the uncertainty of the accumulated phase, radial phase and density for 1D and 2D profiles.
+- ***11. [Uncertainty of Measurement]*** This checkbox enables the visualization of the uncertainty of the accumulated phase, radial phase, and density for 1D and 2D profiles.
 - ***12. [Result Frame]*** In this frame user can verify the results of each stage of the data processing. The results can be seen in 1D or 2D. Results in 2D have different colormaps ***[Colormap]***.
   >**Note:** *default* and *default_r* colormaps are made specifically for IAS. Other colormaps are in matplotlib database.
 - ***13. [Save Plot]*** This button allows the user to save the visualized plot as an image file (*.png*, *.jpg*, *.bmp*, etc).
@@ -171,7 +171,7 @@ Applications (CLA) and project of Brazilian Multipurpose Reactor (RMB) from the 
 ## Acknowledgment
 *Interferogram Analysis Software (IAS)* was developed to help with the analysis of the gaseous targets and plasmas induced by lasers.
 
-The author Jhonatha Ricardo dos Santos also acknowledges the FINEP, PATRIA and RMB. 
+The author Jhonatha Ricardo dos Santos also acknowledges the CNEN, FINEP, PATRIA, and RMB. 
 
 ## License
 *Interferogram Analysis Software (IAS)* is licensed under the [MIT license](/LICENSE).
