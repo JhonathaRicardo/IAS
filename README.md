@@ -89,7 +89,7 @@ The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferog
 | *Fig. 2. a) 3D phase-shift map from plasma with rising background; b) 2D phase-shift map from plasma with background; c) 3D phase-shift map and; d) 2D corrected phase-shift map from plasma without background.* |
     
 - ***6. [Input Parameteres]*** Frame to set the experimental parameters used to acquire the interferogram. These parameters are:
-  - ***[Scaling Factor]*** Interferogram scale in micrometers/pixel (*default is* $1.000\nu/pixel$).
+  - ***[Scaling Factor]*** Interferogram scale in micrometers/pixel (*default is* $1.000 \mu m /pixel$).
   - ***[Laser Wavelength]*** ($\lambda$) and ***[Laser FHWM]*** ($\Delta\lambda$) in nm (*default is* $395\pm0$ *nm, respectively*).
   - ***[Gas/Vapor]*** This frame can only reach Gas/Vapor targets.
     - The list box of some types of gases: *H<sub>2</sub>*, *N<sub>2</sub>*, *He* and *Ar* (*default is *) and ***[Polarizability]*** ($\alpha$) in angstrom³. This parameter usually refers to the tendency of matter to acquire an electric dipole moment when subjected to an electric field (*default is 1.710 A³ for N<sub>2</sub>*).
@@ -157,7 +157,7 @@ In the scheme of the algorithm data processing (*Fig. 7*): *I<sub>Target</sub>* 
 
 ## Examples
 In the Examples folder of this repository, the user will find two examples of interferogram targets: 
-  - [Example 1: Supersonic Gas jet]('/Example 1').
+  - [Example 1: Supersonic Gas jet](/Examples/Example 1/README_Ex1.md)
   - Example 2: Laser-induced Plasma.
 
 These interferograms were obtained using a Mach-Zehnder-like interferometer, as discussed in [[16]](#reference).
