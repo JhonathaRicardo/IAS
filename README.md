@@ -157,8 +157,8 @@ In the scheme of the algorithm data processing (*Fig. 7*): *I<sub>Target</sub>* 
 
 ## Examples
 In the Examples folder of this repository, the user will find two examples of interferogram targets: 
-  - ![Example 1: Supersonic Gas jet](/Examples/Example 1/README_Ex1.md)
-  - Example 2: Laser-induced Plasma.
+  - [Example 1: Supersonic Gas jet](https://github.com/JhonathaRicardo/IAS/blob/main/Examples/Example%201/README_Ex1.md)
+  - [Example 2: Laser-induced Plasma](https://github.com/JhonathaRicardo/IAS/blob/main/Examples/Example%202/README_Ex2.md)
 
 These interferograms were obtained using a Mach-Zehnder-like interferometer, as discussed in [[16]](#reference).
 
