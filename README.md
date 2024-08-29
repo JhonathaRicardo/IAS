@@ -81,38 +81,38 @@ The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferog
 ### Options
 - ***5. [Select Area]*** Parameters frame for users select the interferogram area to apply the algorithm. The selected area is defined by a rectangle with edges defined by X and Y coordinates. The user can select an area using the mouse click over the image or the combo box ***[Y Coord]*** and ***[X Coord]***.
   > **Note:** The mouse's first click defines the first value of the X and Y triangle coordinates, and the second click defines the end coordinates of the triangle. Case, the initial X (or Y) is bigger than the final X (or Y), these values will be exchanged. 
-  - ***[BG Phase Fit]*** This parameter defines the values used to construct the background of the accumulated phase &Phi.
+  - ***[BG Phase Fit]*** This parameter defines the values used to construct the background of the accumulated phase $\phi$.
     - For Gas/Vapor targets this value is set based on a percentage of smaller phase values in the selected area, and this background is defined by a 2D plane (*default is 5%*).
-    - For Plasmas, this parameter defines the border size border used to construct the background of the accumulated phase &Delta;&phi. The borders are defined based on a percentage of the selected area, and the background is obtained using a 4th-order 2D polynomial fitting from the selected border as shown in Fig. 2.a. The Fig. 2.b shows the accumulated phase shift without the fitted background.
+    - For Plasmas, this parameter defines the border size border used to construct the background of the accumulated phase $\phi$. The borders are defined based on a percentage of the selected area, and the background is obtained using a 4th-order 2D polynomial fitting from the selected border as shown in Fig. 2.a and 2.b. The Fig. 2.c and 2.d shows the accumulated phase shift without the fitted background.
       
 |<img src = '/Images/Figure2.png'> |
 |:--:| 
-| *Fig. 2. (a) Accumulated phase map of LIP in 3D with a non-linear background and the selected border (in gray) used to construct the isolated background map; (b) Accumulated phase map of LIP in 3D after removing the background.* |
+| *Fig. 2. a) 3D phase-shift map from plasma with rising background; b) 2D phase-shift map from plasma with background; c) 3D phase-shift map and; d) 2D corrected phase-shift map from plasma without background.* |
     
 - ***6. [Input Parameteres]*** Frame to set the experimental parameters used to acquire the interferogram. These parameters are:
-  - ***[Scaling Factor]*** Interferogram scale in micrometers/pixel (*default is 1.000 &nu;m/pixel*).
-  - ***[Laser Wavelength]*** (&lambda;) and ***[Laser FHWM]*** (&Delta;&lambda;) in nm (*default is 395&plusmn;0 nm, respectively*).
+  - ***[Scaling Factor]*** Interferogram scale in micrometers/pixel (*default is* $1.000\nu/pixel$).
+  - ***[Laser Wavelength]*** ($\lambda$) and ***[Laser FHWM]*** ($\Delta\lambda$) in nm (*default is* $395\pm0$ *nm, respectively*).
   - ***[Gas/Vapor]*** This frame can only reach Gas/Vapor targets.
-    - The list box of some types of gases: *H<sub>2</sub>*, *N<sub>2</sub>*, *He* and *Ar* (*default is *) and ***[Polarizability]*** (&alpha;) in angstrom³. This parameter usually refers to the tendency of matter to acquire an electric dipole moment when subjected to an electric field (*default is 1.710 A³ for N<sub>2</sub>*).
+    - The list box of some types of gases: *H<sub>2</sub>*, *N<sub>2</sub>*, *He* and *Ar* (*default is *) and ***[Polarizability]*** ($\alpha$) in angstrom³. This parameter usually refers to the tendency of matter to acquire an electric dipole moment when subjected to an electric field (*default is 1.710 A³ for N<sub>2</sub>*).
     > **Note**
     > The polarizability value is automatically filled in after selecting the gas type. If the user wants to use gases that are not yet listed, the gas/vapor polarizability value can be entered manually.
 
 - ***7. [Analysis Parameters]*** Parameters frame to analyze the interferogram.
-  - ***[FFT Filter Frequency]***:  The ***[Vert. (&nu;<sub>x</sub>)]*** and ***[Hor. (&nu;<sub>x</sub>)]*** parameters are set automatically by the algorithm and these positions define which frequencies (&pm&nu;<sub>x</sub>) and (&pm&nu;<sub>y</sub>) (*Horizontal  Vertical*) will be used to apply the Inverse Fourier Transform and build the phase map of the target.
-  - ***[Filter Range]*** (&Delta;&nu;) frequency spread of the Gaussian frequency filter in pixel. The initial &Delta;&nu; depends on the image dimension but can changed by the user. These parameters are given in pixels
+  - ***[FFT Filter Frequency]***:  The ***[Vert. (&nu;<sub>x</sub>)]*** and ***[Hor. (&nu;<sub>x</sub>)]*** parameters are set automatically by the algorithm and these positions define which frequencies ($\pm\nu_x$) and ($\pm\nu_y$) (*Horizontal  Vertical*) will be used to apply the Inverse Fourier Transform and build the phase map of the target.
+  - ***[Filter Range]*** ($\Delta\nu$) frequency spread of the Gaussian frequency filter in pixel. The initial $\Delta\nu$ depends on the image dimension but can changed by the user. These parameters are given in pixels
     > **Note:** For Plasmas the algorithm sets the frequencies that generate a negative phase map. Because the refractive index of the plasma is less than 1. This is an intrinsic characteristic of plasmas. However, the relative's positive and negative frequencies depend on interferogram files.
-  - ***[Gaussian Blur]*** (&sigma;<sub>blur</sub>) Spread of the bi-dimensional Gaussian image filter. The standard deviation of the Gaussian filter ($\sigma$) defined by the user is equal for all axes. The ***[Gaussian Blur]*** is used to improve the target symmetry.
-    > **Note:** The (&sigma;<sub>blur</sub>) is automatically calculated from FFT maps, but users can set this value manually. 
+  - ***[Gaussian Blur]*** ($\sigma_{blur}$) Spread of the bi-dimensional Gaussian image filter. The standard deviation of the Gaussian filter ($\sigma$) defined by the user is equal for all axes. The ***[Gaussian Blur]*** is used to improve the target symmetry.
+    > **Note:** The ($\sigma_{blur}$) is automatically calculated from FFT maps, but users can set this value manually. 
   
   - ***[Axisymmetric Orientation]*** Definition of the axis of symmetry (or axisymmetric) to apply the Inverse Abel Transform. The axisymmetric can be Horizontal or Vertical (*default is Horizontal for Plasmas and Vertical for Gas/Vapor targets*) and the ***[Axisymmetric Position]*** is a pixel position on the accumulated phase map to apply the Abel inversion. This position is only for horizontal or vertical orientations. For *None (Hor. our Vert)* orientations the IAS code doesn't apply Abel Inversion. In this case, the density of the target is retrieved by approximation [[15]](#reference).
     
 
 ### Target Profile
 - ***8. [Stages]:*** Stages frame allows the visualization of each result of the algorithm.
-  - ***[Fourier Transform]*** This FFT Frequency map (Fig. 3.a) is built from the Fourier Transform of the target interferogram. The frequency positions highlighted in the FFT Frequency map are automatically identified from pixel columns sum (vertical) and pixel lines sum (horizontal). The selected frequency is marked with a red line over a pixel line (or column) identifying the (&pm&nu;<sub>x</sub>) and (&pm&nu;<sub>y</sub>). 
+  - ***[Fourier Transform]*** This FFT Frequency map (Fig. 3.a) is built from the Fourier Transform of the target interferogram. The frequency positions highlighted in the FFT Frequency map are automatically identified from pixel columns sum (vertical) and pixel lines sum (horizontal). The selected frequency is marked with a red line over a pixel line (or column) identifying the ($\pm\nu_x$) and ($\pm\nu_y$). 
     > **Note:** The user can change this ***[Vert. (&nu;<sub>x</sub>)]*** and ***[Hor. (&nu;<sub>x</sub>)]*** manually. But, the IAS code automatically identifies the frequencies when values equal *'0'*. 
   
-  - ***[Gaussian Filter]*** The Gaussian filter map (Fig. 3.b) is applied to generate the phase map. This filter is built from the selected frequencies &pm&nu;<sub>x</sub>, &pm&nu;<sub>y</sub> and the range frequency &Delta;&nu;(Fig. 3.d).  
+  - ***[Gaussian Filter]*** The Gaussian filter map (Fig. 3.b) is applied to generate the phase map. This filter is built from the selected frequencies ($\pm\nu_x$,$\pm\nu_y$) and the range frequency $\Delta\nu$ (Fig. 3.d).  
 
 |<img src = '/Images/Figure3.png' width="80%">|
 |:--:| 
@@ -120,19 +120,19 @@ The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferog
 
 For the next three steps, users have the option of viewing the 2D maps or 1D curves with standard deviation using the ***[Standard Deviation]*** checkbox.
  
-  - ***[Acc. Phase-shift]*** Accumulated phase-shift (&Delta;&phi;) of the plasma (in rad) retrieved from the interferograms.
+  - ***[Acc. Phase-shift]*** Accumulated phase-shift ($\phi$) of the plasma (in rad) retrieved from the interferograms.
 
 |<img src = '/Images/Figure4.png' width="80%">|
 |:--:| 
 |*Fig. 4. (a) 2D accumulated phase-shift map and (b) 2D standard deviation map; (c) 1D accumulated phase curves and (d) standard deviation of one curve. All phase values are given in rad.*|   
     
-  - ***[Radial Phase-shift]*** Radial phase-shift (&Delta;&phi;<sup>r</sup>) map in $rad/\mu m$ obtained after applying an Inverse Abel Transform from Accumulated Phase-shift map (&Delta;&phi;).
+  - ***[Radial Phase-shift]*** Radial phase-shift ($\varphi_r$) map in $rad/\mu m$ obtained after applying an Inverse Abel Transform from Accumulated Phase-shift map ($\phi$).
 
 |<img src='/Images/Figure5.png' width="80%">|
 |:--:| 
 |*Fig. 5. (a) 2D radial phase-shift map and (b) 2D standard deviation map; (c) and (d) accuracy between 1D radial phase-shift and normalized phase-shift curves. All radial phase values are given in rad/&mu;m.*|  
 
-  - ***[Density Profile]*** molecular density distribution ($N$) of the Gas-Jet in $cm^{−3}$ built from the radial phase-shift ($\Delta\phi_r$) and ***[Laser Wavelength]*** ($\lambda$).
+  - ***[Density Profile]*** molecular density distribution ($N$) of the Gas-Jet in $cm^{−3}$ built from the radial phase-shift ($\varphi_r$) and ***[Laser Wavelength]*** ($\lambda$).
     
 |<img src='/Images/Figure6.png' width="80%">|
 |:--:| 
@@ -154,7 +154,7 @@ A detailed description of the algorithm will be presented in a future article. H
 |:--:| 
 | *Fig. 8. Scheme of the algorithm data processing.* |
 
-In the scheme of the algorithm data processing (*Fig. 7*): *I<sub>Target</sub>* and *I<sub>Reference</sub>* are the intensity functions of the bi-dimensional fringes fields obtained from the target and the reference interferograms, respectively. The hats denote the Fourier transform of the intensities, *N<sup>gas</sup>* is the gas jet density calculated from its refractive index, *n*, and polarizability, &alpha;, using the Lorentz-Lorenz relation [[14,15]](#reference).
+In the scheme of the algorithm data processing (*Fig. 7*): *I<sub>Target</sub>* and *I<sub>Reference</sub>* are the intensity functions of the bi-dimensional fringes fields obtained from the target and the reference interferograms, respectively. The hats denote the Fourier transform of the intensities, *N<sup>gas</sup>* is the gas jet density calculated from its refractive index, *n*, and polarizability, $\alpha$, using the Lorentz-Lorenz relation [[14,15]](#reference).
 
 ## Examples
 In the Examples folder of this repository, the user will find two examples of interferogram targets: Gas and Plasma. These interferograms were obtained using a Mach-Zehnder-like interferometer, as discussed in [[16]](#reference).
