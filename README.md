@@ -18,9 +18,8 @@ Interferometry Analysis Software (IAS) is a dedicated tool for studying gas, vap
   * [Main Screen](#main-screen)
   * [Interferograms](#interferograms)
   * [Options](#options)
-  * [Gas-Jet Profile](#gas-jet-profile)
 * [How it works](#how-it-works)
-* [Example](#example)
+* [Examples](#examples)
 * [Authors](#authors)
 * [Acknowledgment](#acknowledgment)
 * [License](#license)
@@ -48,7 +47,7 @@ The *Interferometry Analysis Software (IAS)* has a graphical interface to facili
 ### Main Screen
 The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferograms, Options, and LIP Profile. Each of these parts will be detailed below.
 
-|<img src = '/Images/Figure1.png'> |
+|<img src = '/Images/Figure1.PNG'> |
 |:--:| 
 | *Fig.1. Software Main Screen* |
 
@@ -157,7 +156,11 @@ A detailed description of the algorithm will be presented in a future article. H
 In the scheme of the algorithm data processing (*Fig. 7*): *I<sub>Target</sub>* and *I<sub>Reference</sub>* are the intensity functions of the bi-dimensional fringes fields obtained from the target and the reference interferograms, respectively. The hats denote the Fourier transform of the intensities, *N<sup>gas</sup>* is the gas jet density calculated from its refractive index, *n*, and polarizability, $\alpha$, using the Lorentz-Lorenz relation [[14,15]](#reference).
 
 ## Examples
-In the Examples folder of this repository, the user will find two examples of interferogram targets: Gas and Plasma. These interferograms were obtained using a Mach-Zehnder-like interferometer, as discussed in [[16]](#reference).
+In the Examples folder of this repository, the user will find two examples of interferogram targets: 
+  - [Example 1: Supersonic Gas jet]('/Example 1').
+  - Example 2: Laser-induced Plasma.
+
+These interferograms were obtained using a Mach-Zehnder-like interferometer, as discussed in [[16]](#reference).
 
 ## Authors
 Interferometry Analysis - Gas-Jet software was developed by researchers of the High-Power Ultrashort Pulse Lasers Group from the Center for Lasers and
