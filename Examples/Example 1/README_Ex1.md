@@ -12,21 +12,32 @@ In this directory (*Interferogram Data*), the users can find two interferogram f
 | *Fig. 1. Examples of Interferogram images: Reference image (on the left), and gas-jet image (on the right).* |
   >Note: The users can use *n* files as Target interferogram and *n* Reference interferogram. Or only one Reference file. 
 
-### 2. Options
+### 2. Options - Target Type and Select Area
 The user must select *Gas/Vapor* as ***[Target Type]***.
   >Note: *Gas/Vapor* type is the default.
 
-#### 2.1. Select Area
 The User must select the rectangle area of ​​the image for IAS analysis, using the [***mouse click***] or [***X/Y Coord.***]. The coordinates values depend on the monitor screen size and do not correspond with the original image size.
   > Note: The first mouse click sets the first value of coordinates [***X/Y Coord.***] and the second click sets the second [***X/Y Coord.***].
 
-The values of the coordinates are [***X Coord.***] = (155, 279) and [***Y Coord.***] = (159,344). We suggest a BG Phase fit of 10%.
+The values of the coordinates are [***X Coord.***] = (155, 279) and [***Y Coord.***] = (159,344). We suggest a BG Phase fit of 10% (*Fig. 2*).
+
+> **Suggestion**: We suggested to users that these ***[Input Parameters]*** can be defined after all analysis. A ***[Scaling Factor]*** equal to 1.00 $\mu m/ pixel$ facilitates the prior analysis of users.
+
+### Analyse Data - Prior Analysis
+Use the ***[Analyse Data]*** button to apply a retrieve phase, radial phase, and density of the target. After the first Accumulated Phase-shift $\phi$ result (*Fig. 2*), the user will be able to refine the results by modifying the ***[Options Parameters]***. 
 
 #### 2.2. Input Parameters
 During data collection, we used a $500\mu m$ diameter dental probe as a calibration parameter. For this example, the user can set ***[Scaling Factor]*** as 1.81 $\mu m/ pixel$ and N<sub>2</sub> as Gas type. The wavelength was indicated before and is equal to ($395 \pm 5 nm$).
-  > **Suggestion**: We suggested to users that these ***[Input Parameters]*** can be defined after all analysis. A ***[Scaling Factor]*** equal to 1.00 $\mu m/ pixel$ facilitates the prior analysis of users.
+
+
+#### 2.3. Analysis Parameters
+#### 2.3.1 Filter Frequencies
+These parameters are used to apply a Gaussian filter in domain frequency to extract a phase-shift promoted by gas presence. It is defined automatically by IAS code.
+Posterior modifications of $\Delta\nu$ can be necessary for better results.
 
 ####
+
+
 All input parameters used for gas-jet characterization are shown in *Fig. 10*.
 
 |<img src = '/Example/MainScreen_Example.png'> |
