@@ -19,12 +19,18 @@ The user must select *Gas/Vapor* as ***[Target Type]***.
 The User must select the rectangle area of ​​the image for IAS analysis, using the [***mouse click***] or [***X/Y Coord.***]. The coordinates values depend on the monitor screen size and do not correspond with the original image size.
   > Note: The first mouse click sets the first value of coordinates [***X/Y Coord.***] and the second click sets the second [***X/Y Coord.***].
 
-The values of the coordinates are [***X Coord.***] = (155, 279) and [***Y Coord.***] = (159,344). We suggest a BG Phase fit of 10% (*Fig. 2*).
+The values of the coordinates are [***X Coord.***] = (155, 279) and [***Y Coord.***] = (159,344). We suggest a BG Phase fit of 10% (*Fig. 2*). 
 
 > **Suggestion**: We suggested to users that these ***[Input Parameters]*** can be defined after all analysis. A ***[Scaling Factor]*** equal to 1.00 $\mu m/ pixel$ facilitates the prior analysis of users.
 
-### Analyse Data - Prior Analysis
-Use the ***[Analyse Data]*** button to apply a retrieve phase, radial phase, and density of the target. After the first Accumulated Phase-shift $\phi$ result (*Fig. 2*), the user will be able to refine the results by modifying the ***[Options Parameters]***. 
+### 3. Analyse Data - Prior Analysis
+Use the ***[Analyse Data]*** button to apply a retrieve phase, radial phase, and density of the target. The ***[Filter Freq.]*** parameters are defined automatically by IAS code. After the first Accumulated Phase-shift $\phi$ result (*Fig. 2*) the user will be able to refine the results by modifying the ***[Options Parameters]***. 
+>**Note**: After each modification the users need to press again ***[Analyse Data]*** button.  
+
+### 4. Refining the Results
+
+
+
 
 #### 2.2. Input Parameters
 During data collection, we used a $500\mu m$ diameter dental probe as a calibration parameter. For this example, the user can set ***[Scaling Factor]*** as 1.81 $\mu m/ pixel$ and N<sub>2</sub> as Gas type. The wavelength was indicated before and is equal to ($395 \pm 5 nm$).
