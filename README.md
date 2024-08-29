@@ -81,7 +81,7 @@ The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferog
 ### Options
 - ***5. [Select Area]*** Parameters frame for users select the interferogram area to apply the algorithm. The selected area is defined by a rectangle with edges defined by X and Y coordinates. The user can select an area using the mouse click over the image or the combo box ***[Y Coord]*** and ***[X Coord]***.
   > **Note:** The mouse's first click defines the first value of the X and Y triangle coordinates, and the second click defines the end coordinates of the triangle. Case, the initial X (or Y) is bigger than the final X (or Y), these values will be exchanged. 
-  - ***[BG Phase Fit]*** This parameter defines the values used to construct the background of the accumulated phase &Delta;&phi;.
+  - ***[BG Phase Fit]*** This parameter defines the values used to construct the background of the accumulated phase &phi;&sub{S}.
     - For Gas/Vapor targets this value is set based on a percentage of smaller phase values in the selected area, and this background is defined by a 2D plane (*default is 5%*).
     - For Plasmas, this parameter defines the border size border used to construct the background of the accumulated phase &Delta;&phi. The borders are defined based on a percentage of the selected area, and the background is obtained using a 4th-order 2D polynomial fitting from the selected border as shown in Fig. 2.a. The Fig. 2.b shows the accumulated phase shift without the fitted background.
       
