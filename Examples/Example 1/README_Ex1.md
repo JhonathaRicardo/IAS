@@ -6,7 +6,7 @@ Detailed usage of the software will be described below:
 ### 1. Open Files
 The user must open a Target interferogram file and a Reference interferogram file.
 In this directory (*Interferogram Data*), the users can find two interferogram files to be used in this example. A Reference *Interferogram_reference.png* (in *Fig. 9. a*) and a Target *Interferogram_gas.png* in (*Fig. 9. b*). 
-|<img src = '/Examples/Example 1/Interferogram_reference.png' width='40%'> <img src = '/Examples/Example 1/Interferogram Data/Interferogram_gas.png' width='40%'> |
+|<img src = '/Examples/Example 1/Interferogram Data/Interferogram_reference.png' width='40%'> <img src = '/Examples/Example 1/Interferogram Data/Interferogram_gas.png' width='40%'> |
 |:--:| 
 | *Fig. 9. Examples of Interferogram images: Reference image (on the left), and gas-jet image (on the right).* |
 
