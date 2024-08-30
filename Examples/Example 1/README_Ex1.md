@@ -50,18 +50,13 @@ The accuracy of applying the Abel-inversion is associated with the symmetry of t
 |:--:| 
 | *Fig. 5. Phase-shift map of the gas target using a Gaussian blur of a) 10 pixels and b) 20 pixels.* |
 
-#### 2.2. Input Parameters
-During data collection, we used a $500\mu m$ diameter dental probe as a calibration parameter. For this example, the user can set ***[Scaling Factor]*** as 1.81 $\mu m/ pixel$ and N<sub>2</sub> as Gas type. The wavelength was indicated before and is equal to ($395 \pm 5 nm$).
+### 6. Radial Phase-shift Analysis
+Applying a Gaussian blur filter of 20 pixels and setting the axis of symmetry in 105th-pixel position, the user retrieves a radial phase-shift shown in Fig. 7.
 
 
-#### 2.3. Analysis Parameters
-#### 2.3.1 Filter Frequencies
-These parameters are used to apply a Gaussian filter in domain frequency to extract a phase-shift promoted by gas presence. It is defined automatically by IAS code.
-Posterior modifications of $\Delta\nu$ can be necessary for better results.
+### 7. Retrieve a Density Distribution of Gaseous Target
+During data collection, we used a $500\mu m$ diameter dental probe as a calibration parameter. For this example, the user can set ***[Scaling Factor]*** as 1.81 $\mu m/ pixel$ and N<sub>2</sub> as Gas type. The wavelength was indicated before and is equal to ($395 \pm 5 nm$). Applying these experimental parameters the users obtain the wished density distribution of the target (Fig. 8).
+The profiles of this density map can be visualized using a ***[1D Plot]*** and the slide control in ***[1D Frame]***. 
 
-####
-
-
-All input parameters used for gas-jet characterization are shown in *Fig. 10*.
 
 
