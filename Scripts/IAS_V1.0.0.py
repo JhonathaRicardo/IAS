@@ -1,7 +1,7 @@
 # Software: Interferometry Analysis Software (Version 1.0.0)
 # Authors: Jhonatha Ricardo dos Santos, Armando Zuffi, Ricardo Edgul Samad, Nilson Dias Vieira Junior
 # Python 3.11
-# Last update: 2024_08_28
+# Last update: 2024_08_30
 
 # LYBRARIES
 # The Python Standard Library
@@ -109,7 +109,7 @@ cmapIAS = ['default','default_r', 'rainbow', 'rainbow_r', 'gist_rainbow', 'gist_
 SCNwidth, SCNheight = SCNsize = sg.Window.get_screen_size()
 ##############################################################################################
 #WINDOW DIMENSION (Default = 80%)
-WINwidth, WINheight = WINsize = (int(0.80*SCNwidth), int(0.80*SCNheight))
+WINwidth, WINheight = WINsize = (int(0.8*SCNwidth), int(0.8*SCNheight))
 ##############################################################################################
 # Images Dimensions
 width, height = size = int(0.3*WINwidth), int(0.48*WINheight)  # Scale image - interferogram
@@ -183,10 +183,10 @@ layout_input_parameters = [
 # FREQ. FRAMES
 layout_frame_freq = [
     [sg.Text('Freq. vx (pixel): '), sg.Checkbox('-vx       ', default=False, key='-oppositevx-',enable_events=True),
-     sg.Spin([i for i in range(minvalue_x, maxvalue_x + 1)], initial_value=0, size=(5, 1), key='-centerfh-',
-             enable_events=True) ],
-    [sg.Text('Freq. vy (pixel): '), sg.Checkbox('-vy       ', default=False, key='-oppositevy-',enable_events=True),
      sg.Spin([i for i in range(minvalue_y, maxvalue_y + 1)], initial_value=0, size=(5, 1), key='-centerfv-',
+             enable_events=True) ],
+[sg.Text('Freq. vy (pixel): '), sg.Checkbox('-vy       ', default=False, key='-oppositevy-',enable_events=True),
+     sg.Spin([i for i in range(minvalue_x, maxvalue_x + 1)], initial_value=0, size=(5, 1), key='-centerfh-',
              enable_events=True) ],
     [sg.Text('Filter Range  Δv (pixel):          '),
      sg.Spin([i for i in range(0, maxvalue_x // 2)], initial_value=0, size=(5, 1), key='-sigma_gfilter-',
@@ -329,12 +329,12 @@ while True:
     # FFT FREQUENCY
     if event == '-oppositevx-' or event == '-oppositevy-':
         window['-axisymm_pos-'].update('0')
-        if values['-oppositevx-'] == True:
+        if values['-oppositevy-'] == True:
              window['-centerfh-'].update(str(fph[-1]))
         else:
              window['-centerfh-'].update(str(fph[0]))
 
-        if values['-oppositevy-'] == True:
+        if values['-oppositevx-'] == True:
              window['-centerfv-'].update(str(fpv[-1]))
         else:
              window['-centerfv-'].update(str(fpv[0]))
@@ -720,7 +720,7 @@ while True:
             fftmap = (fftmap - np.min(fftmap)) * np.ones(np.shape(fftmap)) / (np.max(fftmap) - np.min(fftmap))
 
             summaph,fph, summapv, fpv, centerfh, centerfv, f_range, fang_deg =\
-                func_cfilter(fftmap, centerfh,centerfv, values['-oppositevx-'], values['-oppositevy-'])
+                func_cfilter(fftmap, centerfh,centerfv, values['-oppositevy-'], values['-oppositevx-'])
 
 
             window['-centerfh-'].update(str(centerfh))
@@ -759,12 +759,12 @@ while True:
             fdist_tgt, std_fdist_tgt = fringes_width(inttgt, int(fang_deg))
             fdist_ref, std_fdist_ref = fringes_width(intref, int(fang_deg))
             try:
-                std_phasemap_i = np.sqrt(np.square(abs_std / fdist_tgt) + np.square(abs_std / fdist_ref) + \
+                std_phasemap_1 = np.sqrt(np.square(abs_std / fdist_tgt) + np.square(abs_std / fdist_ref) + \
                                  np.square(disp /fdist_tgt))
 
             except:
 
-                std_phasemap_i = np.zeros(np.shape(intref))
+                std_phasemap_1 = np.zeros(np.shape(intref))
             #breakpoint()
             '''
             ################################################################################
@@ -780,7 +780,7 @@ while True:
             # Transpose Matrix for Horizontal Axissmetry
             if values['-comboaxisymm-'] == 'Horizontal':
                 uwphasemap = np.transpose(uwphasemap)
-                std_phasemap_i = np.transpose(std_phasemap_i)
+                std_phasemap_1 = np.transpose(std_phasemap_1)
 
             nlines, nrows = np.shape(uwphasemap)
 
@@ -821,22 +821,18 @@ while True:
             #######################################################################################################
             # PHASEMAP E STD PHASEMAP
             # First contribution: Experimental + baseline
-            std_phasemap_i = np.sqrt(np.square(std_blmap * np.ones(np.shape(uwphasemap))) + np.square(std_phasemap_i))
+            std_phasemap_i = np.sqrt(np.square(std_blmap * np.ones(np.shape(resultphase))) + np.square(std_phasemap_1))
 
             # Apply gaussian blur
             phasemap_corr = (gaussian_filter(resultphase, sigma=sigma_gblur))
 
-            # Std without gaussian blur
-            std_resultphase = ((np.ones(np.shape(resultphase))).T * np.std(resultphase, axis=1)).T
+            std_phasemap_corr = (gaussian_filter(std_phasemap_i, sigma=sigma_gblur))
 
-            # Std caused by Gaussian blur
-            if sigma_gblur == 0:
-                std_phasemap_corr = np.zeros(np.shape(resultphase))
-            else:
-                std_phasemap_corr = np.abs(gaussian_filter(resultphase, sigma=1) - phasemap_corr)
-
-            std_phasemap_corr = np.sqrt(np.square(std_phasemap_corr) + np.square(std_phasemap_i) +
-                                        np.square(std_resultphase))
+            #normalizing the std phase values from std phase without gaussian blur
+            if sigma_gblur > 0:
+                norm_std = (std_phasemap_corr-np.min(std_phasemap_corr))/(np.max(std_phasemap_corr)-np.min(std_phasemap_corr))
+                #norm_std = (std_phasemap_corr)/(np.max(std_phasemap_corr))
+                std_phasemap_corr = np.min(std_phasemap_i) + (np.max(std_phasemap_i)-np.min(std_phasemap_i))*norm_std
 
             '''
             ########################################################################################
@@ -1455,8 +1451,8 @@ while True:
 
             if values['filterradio'] == True or values['fftradio'] == True:
                 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(4.9, 4))
-                ax1.plot(np.arange(0, rangev), summapv, label=r'$\sum_{\nu_{y}} \hspace{.5} ln|\hat{I}|$', lw=2, color="gray")
-                ax2.plot(np.arange(0, rangeh), summaph, label=r'$\sum_{\nu_{x}} \hspace{.5} ln|\hat{I}|$', lw=2, color="gray")
+                ax1.plot(np.arange(0, rangev), summapv, label=r'$\sum_{\nu_{x}} \hspace{.5} ln|\hat{I}|$', lw=2, color="gray")
+                ax2.plot(np.arange(0, rangeh), summaph, label=r'$\sum_{\nu_{y}} \hspace{.5} ln|\hat{I}|$', lw=2, color="gray")
                 ax1.set_xlim(0, rangev)
                 ax2.set_xlim(0, rangeh)
                 if centerfv!=0:
@@ -1535,7 +1531,7 @@ while True:
                 ax1.set_xlabel(xlabel, fontsize=12)
 
                 if values['densradio'] == True:
-                    labelplot = r'$\rho_{%d \hspace{.5}\mu m}$'
+                    labelplot = r'$%d \hspace{.5}\mu m$'
                     ax1.plot(raxis_um, array_plot, label=labelplot % h_prof, lw=2, color="blue")
                     ax1.set_ylabel(r'$\rho\hspace{.5} (cm^{-3})$', fontsize=12)
                     strmax = r'$\rho_{max}=%.2e (\pm %.1f\%%)$' % (np.max(array_plot), 100 * array_std[np.argmax(array_plot)] / np.max(array_plot))
@@ -1552,7 +1548,7 @@ while True:
                         ax1.set_ylim(bottom=0.)
 
                 if values['abelradio'] == True:
-                    labelplot = r'$(\varphi_r)_{%d \hspace{.5}\mu m}$'
+                    labelplot = r'$%d \hspace{.5}\mu m$'
                     ax1.plot(raxis_um, array_plot, label=labelplot % h_prof, lw=2, color="blue")
                     ax1.set_ylabel(r'$\varphi_{r}\hspace{.5} (rad/ \mu m)$', fontsize=12)
                     if values['-checkstd-'] == True:
@@ -1564,7 +1560,7 @@ while True:
                                     #color="blue")
 
                 if values['phaseradio'] == True:
-                    labelplot = r'$(\phi)_{%d \hspace{.5}\mu m}$'
+                    labelplot = r'$%d \hspace{.5}\mu m$'
                     ax1.plot(raxis_um, array_plot, label=labelplot % h_prof, lw=2, color="blue")
                     ax1.set_ylabel(r'$\phi\hspace{.5} (rad)$', fontsize=12)
                     if values['-checkstd-'] == True:
