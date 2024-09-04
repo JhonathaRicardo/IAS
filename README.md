@@ -117,7 +117,7 @@ The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferog
 |:--:| 
 | *Fig. 3. (a) 2D and (b) 1D frequency domain obtained by the interferogram Fourier Transform with the selected frequency to be filtered; (c) Gaussian filter to be applied on the selected frequency; (d) 1D frequency domain with range frequency to apply the Gaussian filter.* |
 
-For the next three steps, users have the option of viewing the 2D maps or 1D curves with standard deviation using the ***[Standard Deviation]*** checkbox.
+For the next three steps, users can view the 2D maps or 1D curves with standard deviation using the ***[Standard Deviation]*** checkbox.
  
   - ***[Acc. Phase-shift]*** Accumulated phase-shift ($\phi$) of the plasma (in rad) retrieved from the interferograms.
 
@@ -135,23 +135,23 @@ For the next three steps, users have the option of viewing the 2D maps or 1D cur
     
 |<img src='/Images/Figure6.png' width="80%">|
 |:--:| 
-|*Fig. 5. (a) 2D plasma density map and (b) 2D standard deviation map; (c) 1D plasma density curves and (d) standard deviation of one density curve. All density values are given in cm&oline;³ .*|
+|*Fig. 6. (a) 2D plasma density map and (b) 2D standard deviation map; (c) 1D plasma density curves and (d) standard deviation of one density curve. All density values are given in cm&oline;³ .*|
 
 - ***9. [1D Profile]*** This button enables a 1D frame (*Item 15 in Fig. 1*) with options for the user to visualize the curves of each selected stage for different positions on the chosen symmetry axis.
 - ***10. [2D Profile]*** This button enables the visualization of each ***[Stage]*** in 2D images.
 - ***11. [Uncertainty of Measurement]*** This checkbox enables the visualization of the uncertainty of the accumulated phase, radial phase, and density for 1D and 2D profiles.
-- ***12. [Result Frame]*** In this frame user can verify the results of each stage of the data processing. The results can be seen in 1D or 2D. Results in 2D have different colormaps ***[Colormap]***.
+- ***12. [Result Frame]*** In this frame, the user can verify the results of each data processing stage. The results can be seen in 1D or 2D. Results in 2D have different colormaps ***[Colormap]***.
   >**Note:** *default* and *default_r* colormaps are made specifically for IAS. Other colormaps are in matplotlib database.
 - ***13. [Save Plot]*** This button allows the user to save the visualized plot as an image file (*.png*, *.jpg*, *.bmp*, etc).
-- ***14. [Save Data]*** This button allows the user to save the 2D array that generated the visualized plot as a *.dat* or *.txt* file.
+- ***14. [Save Data]*** This button allows users to save the 2D array that generated the visualized plot as a *.dat* or *.txt* file.
 - ***15. [1D Profile]*** This Frame allows the visualization of 1D profiles (accumulated phase, radial phase, and density) for different positions over the Axisymmetry.
 
 ## How it works
-A detailed description of the algorithm will be presented in a future article. However, the summarized data processing by the software algorithm is described by the flowchart shown in *Fig. 8*:
+A detailed description of the algorithm will be presented in a future article. However, the summarized data processing by the software algorithm is described by the flowchart shown in *Fig. 7*:
 
 |<img src = '/Images/Figure7.png' width="80%">|
 |:--:| 
-| *Fig. 8. Scheme of the algorithm data processing.* |
+| *Fig. 7. Scheme of the algorithm data processing.* |
 
 In the scheme of the algorithm data processing (*Fig. 7*): *I<sub>Target</sub>* and *I<sub>Reference</sub>* are the intensity functions of the bi-dimensional fringes fields obtained from the target and the reference interferograms, respectively. The hats denote the Fourier transform of the intensities, *N<sup>gas</sup>* is the gas jet density calculated from its refractive index, *n*, and polarizability, $\alpha$, using the Lorentz-Lorenz relation [[14,15]](#reference).
 
