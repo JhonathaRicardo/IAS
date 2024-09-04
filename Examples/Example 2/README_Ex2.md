@@ -1,4 +1,4 @@
-# Example 1 - Analysis of Laser-induced Plasma
+# Example 2 - Analysis of Laser-induced Plasma
 
 To demonstrate the software we will display one of the data obtained in the experiments carried out in the High Power Laser Laboratory at IPEN. The interferograms were recorded using a home-made time-resolved Mach-Zehnder-like interferometer (MZI), a detailed description of which can be found in [[16]](#Reference). The laser-induced plasma was produced in the atmosphere by focusing pump pulses with energy of 200 𝜇𝐽, duration of 25 𝑓𝑠 (FWHM), and 𝑀2 ≈ 1.2, to beam waist of ≈ 4 𝜇𝑚, reaching intensities above 10<sup>16</sup> 𝑊/𝑐𝑚2[[1]](#Reference). The CCD used in the setup saved images with dimensions of 1280 × 1024. The interference pattern fringes were adjusted to be perpendicular to the laser propagation direction with a high spatial frequency to make the plasma-shifted fringes visible.
 
@@ -8,7 +8,7 @@ Detailed usage of the software will be described below:
 ### 1. Open Files
 The user must open a Target and Reference interferogram files, using [***Open File***] and [***Open Ref.***] buttons, respectively.
 In this directory (*Interferogram Data*), the users can find two interferogram files to download. A Reference *Interferogram(reference).png* (in *Fig. 1. a*) and a Target *Interferogram(plasma).png* in (*Fig. 1. b*). These image files are used in this example. 
-|<img src = '/Examples/Example 2/Interferogram Data/Interferogram (reference).png' width='40%'> <img src = '/Examples/Example 1/Interferogram Data/Interferogram (plasma).png' width='40%'> |
+|<img src = 'Examples/Example 2/Interferogram Data/interferogram (reference).png' width='40%'> <img src = 'Examples/Example 2/Interferogram Data/interferogram (plasma).png' width='40%'> |
 |:--:| 
 | *Fig. 1. Examples of Interferogram images: Reference image (on the left), and Plasma image (on the right).* |
   >Note: The users can use *n* files as Target interferogram and *n* Reference interferogram. Or only one Reference file. 
