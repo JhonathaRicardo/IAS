@@ -58,7 +58,7 @@ Applying a Gaussian blur filter of 20 pixels and setting the axis of symmetry in
 | *Fig. 5. Phase-shift map of the gas target using a Gaussian blur of a) 10 pixels and b) 20 pixels.* |
 
 ### 7. Retrieve a Density Distribution of Gaseous Target
-During data collection, we used a $500\mu m$ diameter dental probe as a calibration parameter. For this example, the user can set ***[Scaling Factor]*** as 1.81 $\mu m/ pixel$ and N<sub>2</sub> as Gas type. The wavelength was indicated before and is equal to ($395 \pm 5 nm$). Applying these experimental parameters the users obtain the wished density distribution of the target (Fig. 7).
+During data collection, we used a $500\mu m$ diameter dental probe as a calibration parameter. For this example, the user can set ***[Scaling Factor]*** as 1.81 $\mu m/ pixel$. The wavelength was indicated before and is equal to ($395 \pm 5 nm$). Applying these experimental parameters the users obtain the wished density distribution of the target (Fig. 7).
 The profiles of this density map can be visualized using a ***[1D Plot]*** and the slide control in ***[1D Frame]***. 
 
 |<img src = '/Examples/Example 1/Images/Figure7Ex1.png'> |
