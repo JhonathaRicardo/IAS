@@ -37,7 +37,7 @@ The *Interferometry Analysis Software (IAS)* was developed in Python 3.11. The u
 
 Users also can create a single .exe file using the [pyinstaller](https://pyinstaller.org/en/stable/) package through the following terminal command:
 
-<code>   pyinstaller --onefile -w IAS_V31.0.0.py                </code>
+<code>   pyinstaller --onefile -w IAS_V1.0.0.py                </code>
 
 Users who do not use Python IDEs can utilize the software through the executable file available for download [here](https://drive.google.com/file/d/1K_-3wm8TOzxROLyAc22AkRXlRvD3GjjI/view?usp=sharing)
 
