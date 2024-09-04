@@ -36,7 +36,7 @@ Use the ***[Analyse Data]*** button to apply a retrieve phase, radial phase, and
 To refine the Acc. Phase-shift ($\phi$) the user must verify the ***[Frequency Domain]*** 2D and 1D. In this example, the $\nu_y$ position defined by code is $46$ and the $\nu_x$ is null because the fringes orientation of interferograms is horizontal. The Fig. 3.a and 3.b show that $\nu_y = 46$ is the right position to extract the phase-shift and $\Delta\nu = 5 pixel$ is a good range to apply a Gaussian filter. The Fig. 3.c is a phase-shift map retrieved from these parameters.
 |<img src = '/Examples/Example 1/Images/Figure3Ex1.png'> |
 |:--:| 
-| *Fig. 3. a) 2D Frequency Domain with* $\nu_x = 0$ *and* $\nu_y = 46$*; b) Identification of frequency position $\nu_x and filter range $\Delta\nu$*|
+| *Fig. 3. a) 2D Frequency Domain with* $\nu_x = 0$ *and* $\nu_y = 46$*; b) Identification of frequency position* $\nu_x$ *and filter range* $\Delta\nu$.|
 
 From these parameters, IAS code builds the acc. phase-shift $\phi$ and uncertainty of phase-shift $\sigma_{\phi}$ map.
 |<img src = '/Examples/Example 1/Images/Figure4Ex1.png'> |
