@@ -41,8 +41,10 @@ Users also can create a single .exe file using the [pyinstaller](https://pyinsta
 
 Users who do not use Python IDEs can utilize the software through the executable file available for download [here](https://drive.google.com/drive/folders/1Sglw_tgiPsN5ZszKSvEVoS9Gcie-NB8N?usp=drive_link).
 >Note: Users can install IAS with 2 resolutions as default:
-  > IAS_V1.0.0_res45x45 - Version with width and height equal to 45% of monitor resolution.
-  > IAS_V1.0.0_res80x80 - Version with width and height equal to 45% of monitor resolution.
+
+  >IAS_V1.0.0_res45x45 - Version with width and height equal to 45% of monitor resolution.
+
+  >IAS_V1.0.0_res80x80 - Version with width and height equal to 45% of monitor resolution.
 
 ## How to use it
 The *Interferometry Analysis Software (IAS)* has a graphical interface to facilitate its use, and this section provides a simple review of the software's functions and how to employ them.
