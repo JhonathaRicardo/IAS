@@ -10,6 +10,7 @@ Interferometry Analysis Software (IAS) is a dedicated tool for studying gas, vap
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![version](https://img.shields.io/badge/version-v.1.0.0-green)
 ![status](https://img.shields.io/badge/status-under%20development-yellow)
+[![DOI](https://zenodo.org/badge/839326573.svg)](https://zenodo.org/doi/10.5281/zenodo.13693200)
 
 ## Summary
 * [Introduction](#introduction)
@@ -187,7 +188,7 @@ The author Jhonatha Ricardo dos Santos also acknowledges the CNEN, FINEP, PATRIA
 Copyright (c) 2024 Jhonatha Ricardo dos Santos
 
 ## Citation
-You can find the DOI for the latest version at [Zenodo]().
+You can find the DOI for the latest version at [Zenodo](https://zenodo.org/doi/10.5281/zenodo.13693200).
 
 ## Reference
 - [1] A. V. F. Zuffi, J. R. dos Santos, E. P. Maldonado, N D. Vieira, and R. E. Samad, "Femtosecond laser-plasma dynamics study by a time-resolved Mach–Zehnder-like interferometer," Appl. Opt. 62, C128-C134 (2023) [DOI: 10.1364/AO.477395](https://doi.org/10.1364/AO.477395).
