@@ -11,7 +11,7 @@
 # Scipy from scipy.org
 # Scikit-image from  https://doi.org/10.7717/peerj.453
 # Pillow (PIL Fork) 9.3.0 from pypi.org/project/Pillow
-from IASFunctions_V3 import *
+from IASFunctions_V1 import *
 import abel
 import PySimpleGUI as sg
 import os
