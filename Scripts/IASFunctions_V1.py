@@ -157,31 +157,29 @@ def fringes_width(data, fang_deg):
     :param n: 2D array, 2D array of ref. image.
     :return: mean fringe width
     '''
-    data1 = rotate(data, 90 - fang_deg, reshape = True)
+    data1 = rotate(data, 90 - fang_deg, reshape = False)
     nl, nr = np.shape(data1)
     f_width = np.zeros(np.shape(data1))
+    data2 = np.zeros(np.shape(data1))
+    for r in range(0, nr):
+        col = data1[:, r]
+        data2[:, r] = np.where(col == 0, np.max(col), col)
+
     for l in range(0, nl):
-        line1 = (data1[l, :])
+        li = (data2[l, :])
         try:
-            ypeaks1, _ = find_peaks(line1, height=0.5 * np.max(line1), width=1)
+            ypeaks1, _ = find_peaks(li, height=0.5 * np.max(li), width=1)
 
-            x0 = np.arange(ypeaks1[0], ypeaks1[-1], 1)
-            y0 = np.interp(x0, ypeaks1[0:-1], np.diff(ypeaks1))
+            x = np.arange(0,nr,1)
+            y = np.interp(x, ypeaks1[0:-1], np.diff(ypeaks1))
 
-            xl = np.arange(0, ypeaks1[0], 1)
-            yl = np.zeros((np.shape(xl)))
-
-            xr = np.arange(ypeaks1[-1], nr, 1)
-            yr = np.zeros((np.shape(xr)))
-
-            x = np.hstack((xl, x0, xr))
-            y = np.hstack((yl, y0, yr))
-
-            x_interp = np.linspace(0, nr, nr)
-            f_width[l, :] = np.interp(x_interp, x, y)
+            f_width[l, :] = y
         except:
-            f_width[l, :] = np.zeros(np.shape(line1))
-    result = rotate(data, -(90 - fang_deg), reshape = True)
+            f_width[l, :] = np.zeros(np.shape(li))
+
+    result = np.asfarray(rotate(f_width, -(90 - fang_deg), reshape = False))
+    result = np.where(result == 0, np.mean(f_width), result)
+
     return result, np.std(f_width)
 
 def baseline2D_gas(data, base_ref):
@@ -249,6 +247,7 @@ def func_gfilter(data, centerfh, centerfv, f_range, sigma_gfilter):
         sigma_gfilter = (2 * f_range)
     for i in X:
         gfilterh[:, i] = np.exp(-np.square(Y - centerfh) / (2 * np.square(sigma_gfilter)))
+
     for i in Y:
         gfilterv[i, :] = np.exp(-np.square(X - centerfv) / (2 * np.square(sigma_gfilter)))
 
