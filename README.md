@@ -116,7 +116,7 @@ The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferog
   - ***[Fourier Transform]*** This FFT Frequency map (Fig. 3.a) is built from the Fourier Transform of the target interferogram. The frequency positions highlighted in the FFT Frequency map are automatically identified from pixel columns sum (vertical) and pixel lines sum (horizontal). The selected frequency is marked with a red line over a pixel line (or column) identifying the ($\pm\nu_x$) and ($\pm\nu_y$). 
     > **Note:** The user can change this ***[Vert. (&nu;<sub>x</sub>)]*** and ***[Hor. (&nu;<sub>x</sub>)]*** manually. But, the IAS code automatically identifies the frequencies when values equal *'0'*. 
   
-  - ***[Gaussian Filter]*** The Gaussian filter map (Fig. 3.b) is applied to generate the phase map. This filter is built from the selected frequencies ($\pm\nu_x$,$\pm\nu_y$) and the range frequency $\Delta\nu$ (Fig. 3.d).  
+  - ***[Gaussian Filter]*** The Gaussian filter map (Fig. 3.b) is applied to generate the phase map. This filter is built from the selected frequencies ($\pm\nu_x$, $\pm\nu_y$) and the range frequency $\Delta\nu$ (Fig. 3.d).  
 
 |<img src = '/Images/Figure3.png' width="80%">|
 |:--:| 
@@ -173,7 +173,7 @@ Applications (CLA) and project of Brazilian Multipurpose Reactor (RMB) from the 
 
 * Jhonatha Ricardo dos Santos [![logo_ORCID](/Images/logo_ORCID.png)](https://orcid.org/0000-0001-7877-0580)
 * Armando Valter Felicio Zuffi [![logo_ORCID](/Images/logo_ORCID.png)](https://orcid.org/0000-0001-5705-1499)
-* Nilson Dias Vieira Junior [![logo_ORCID](/Images/logo_ORCID.png)]
+* Nilson Dias Vieira Junior ![logo_ORCID](/Images/logo_ORCID.png)
 * Ricardo Elgul Samad [![logo_ORCID](/Images/logo_ORCID.png)](https://orcid.org/0000-0001-7762-8961)
 
 ## Acknowledgment
