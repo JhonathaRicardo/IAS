@@ -36,7 +36,7 @@ Use the ***[Analyse Data]*** button to apply a retrieve phase, radial phase, and
 To refine the Acc. Phase-shift ($\phi$) the user must verify the ***[Frequency Domain]*** 2D and 1D. In this example, the $\nu_x$ position defined by code is $267$ and the $\nu_y$ is null because the fringes orientation of interferograms is vertical. The Fig. 3.a and 3.b show that $\nu_x = 267$ is the right position to extract the phase-shift and $\Delta\nu = 7 pixel$ is a good range to apply a Gaussian filter.
 |<img src = '/Examples/Example 2/Images/Figure3Ex2.png'> |
 |:--:| 
-| *Fig. 3. a) 2D Frequency Domain with* $\nu_x = 267$ *and* $\nu_y = 0$*; b) Identification of frequency position $\nu_x and filter range $\Delta\nu$*|
+| *Fig. 3. a) 2D Frequency Domain with* $\nu_x = 267$ *and* $\nu_y = 0$*; b) Identification of frequency position* $\nu_x$ *and filter range* $\Delta\nu$|
 >Note: For plasmas analysis the IAS code defines the frequency $-\nu_x$ and $-\nu_y$ as default. But, these parameters can depend on the interferogram data. 
 
 From these parameters, IAS code builds the acc. phase-shift $\phi$ and uncertainty of phase-shift $\sigma_{\phi}$ map using a Gaussian blur of 5 pixels (*Default value*).
