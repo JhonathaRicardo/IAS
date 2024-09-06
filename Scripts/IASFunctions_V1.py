@@ -3,9 +3,8 @@
 ################################################################################
 # Authors: Jhonatha Ricardo dos Santos, Armando Zuffi, Ricardo Edgul Samad, Nilson Dias Vieira Junior
 # Python 3.11
-# Last update: 2024_08_08
+# Last update: 2024_09_06
 
-import PySimpleGUI as sg
 import os
 import io
 
@@ -25,7 +24,7 @@ from PIL import Image, ImageDraw
 # GET BINARY DATA
 def getBinaryData(filename):
     '''
-    path file name to binary value
+    :path file name to binary value
     :param filename: path of file
     :return: binary value
     '''
