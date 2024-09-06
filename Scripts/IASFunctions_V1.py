@@ -1,5 +1,5 @@
 #################################################################################
-# FUNCTIONS OF INTEFEROGRAM ANALYSIS V.3.X.X
+# FUNCTIONS OF INTERFEROGRAM ANALYSIS V.3.X.X
 ################################################################################
 # Authors: Jhonatha Ricardo dos Santos, Armando Zuffi, Ricardo Edgul Samad, Nilson Dias Vieira Junior
 # Python 3.11
