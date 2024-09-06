@@ -1,19 +1,19 @@
 # Software: Interferometry Analysis Software (Version 1.0.0)
 # Authors: Jhonatha Ricardo dos Santos, Armando Zuffi, Ricardo Edgul Samad, Nilson Dias Vieira Junior
 # Python 3.11
-# Last update: 2024_08_30
+# Last update: 2024_09_06
 
 # LYBRARIES
 # The Python Standard Library
 # PyAbel/PyAbel:v0.9.0rc1 from https://doi.org/10.5281/zenodo.7401589.svg
-# PySimpleGUI from pysimplegui.org
+# FreeSimpleGUI from https://pypi.org/project/FreeSimpleGUI/
 # Matplotlib from matplotlib.org
 # Scipy from scipy.org
 # Scikit-image from  https://doi.org/10.7717/peerj.453
 # Pillow (PIL Fork) 9.3.0 from pypi.org/project/Pillow
 from IASFunctions_V1 import *
 import abel
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 import os
 import math
 import numpy as np
@@ -109,7 +109,7 @@ cmapIAS = ['default','default_r', 'rainbow', 'rainbow_r', 'gist_rainbow', 'gist_
 SCNwidth, SCNheight = SCNsize = sg.Window.get_screen_size()
 ##############################################################################################
 #WINDOW DIMENSION (Default = 80%)
-WINwidth, WINheight = WINsize = (int(0.8*SCNwidth), int(0.8*SCNheight))
+WINwidth, WINheight = WINsize = (int(0.80*SCNwidth), int(0.80*SCNheight))
 ##############################################################################################
 # Images Dimensions
 width, height = size = int(0.3*WINwidth), int(0.48*WINheight)  # Scale image - interferogram
