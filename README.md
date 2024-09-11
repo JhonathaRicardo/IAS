@@ -178,9 +178,7 @@ Applications (CLA) and project of Brazilian Multipurpose Reactor (RMB) from the 
 * Ricardo Elgul Samad [![logo_ORCID](/Images/logo_ORCID.png)](https://orcid.org/0000-0001-7762-8961)
 
 ## Acknowledgment
-*Interferogram Analysis Software (IAS)* was developed to help with the analysis of the gaseous targets and plasmas induced by lasers.
-
-The author Jhonatha Ricardo dos Santos also acknowledges the CNEN, FINEP, PATRIA, and RMB. 
+The author Jhonatha Ricardo dos Santos also acknowledges the IPEN, CNEN, FINEP, PATRIA, and RMB. 
 
 ## License
 *Interferogram Analysis Software (IAS)* is licensed under the [MIT license](/LICENSE).
