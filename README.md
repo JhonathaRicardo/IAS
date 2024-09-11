@@ -169,7 +169,7 @@ In the Examples folder of this repository, the user will find two examples of in
 These interferograms were obtained using a Mach-Zehnder-like interferometer, as discussed in [[16]](#reference).
 
 ## Authors
-Interferometry Analysis - Gas-Jet software was developed by researchers of the High-Power Ultrashort Pulse Lasers Group from the Center for Lasers and
+*Interferogram Analysis Software (IAS)* was developed by researchers of the High-Power Ultrashort Pulse Lasers Group from the Center for Lasers and
 Applications (CLA) and project of Brazilian Multipurpose Reactor (RMB) from the Instituto de Pesquisas Energéticas e Nucleares ([IPEN](https://www.ipen.br/portal_por/portal/default.php)).
 
 * Jhonatha Ricardo dos Santos [![logo_ORCID](/Images/logo_ORCID.png)](https://orcid.org/0000-0001-7877-0580)
