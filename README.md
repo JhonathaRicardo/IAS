@@ -179,7 +179,7 @@ Applications (CLA) and project of Brazilian Multipurpose Reactor (RMB) from the 
 
 ## Acknowledgment
 The author Jhonatha Ricardo dos Santos also acknowledges the IPEN, CNEN, FINEP, PATRIA, and RMB. 
-
+<img src = '/Images/aknowlegdment.png' width="100%">
 ## License
 *Interferogram Analysis Software (IAS)* is licensed under the [MIT license](/LICENSE).
 
