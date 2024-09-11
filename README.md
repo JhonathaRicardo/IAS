@@ -98,7 +98,7 @@ The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferog
   - ***[Scaling Factor]*** Interferogram scale in micrometers/pixel (*default is* $1.000 \mu m /pixel$).
   - ***[Laser Wavelength]*** ($\lambda$) and ***[Laser FHWM]*** ($\Delta\lambda$) in nm (*default is* $395\pm0$ *nm, respectively*).
   - ***[Gas/Vapor]*** This frame can only reach Gas/Vapor targets.
-    - The list box of some types of gases: *H<sub>2</sub>*, *N<sub>2</sub>*, *He* and *Ar* (*default is *) and ***[Polarizability]*** ($\alpha$) in angstrom³. This parameter usually refers to the tendency of matter to acquire an electric dipole moment when subjected to an electric field (*default is 1.710 A³ for N<sub>2</sub>*).
+    - The list box of some types of gases: *H<sub>2</sub>*, *N<sub>2</sub>*, *He* and *Ar* (*default is N<sub>2</sub>*) and ***[Polarizability]*** ($\alpha$) in angstrom³. This parameter usually refers to the tendency of matter to acquire an electric dipole moment when subjected to an electric field (*default is 1.710 A³ for N<sub>2</sub>*).
     > **Note**
     > The polarizability value is automatically filled in after selecting the gas type. If the user wants to use gases that are not yet listed, the gas/vapor polarizability value can be entered manually.
 
@@ -106,7 +106,7 @@ The Software Main Screen (*Fig. 1*) can be divided into 3 main parts: Interferog
   - ***[FFT Filter Frequency]***:  The ***[Vert. (&nu;<sub>x</sub>)]*** and ***[Hor. (&nu;<sub>x</sub>)]*** parameters are set automatically by the algorithm and these positions define which frequencies ($\pm\nu_x$) and ($\pm\nu_y$) (*Horizontal  Vertical*) will be used to apply the Inverse Fourier Transform and build the phase map of the target.
   - ***[Filter Range]*** ($\Delta\nu$) frequency spread of the Gaussian frequency filter in pixel. The initial $\Delta\nu$ depends on the image dimension but can changed by the user. These parameters are given in pixels
     > **Note:** For Plasmas the algorithm sets the frequencies that generate a negative phase map. Because the refractive index of the plasma is less than 1. This is an intrinsic characteristic of plasmas. However, the relative's positive and negative frequencies depend on interferogram files.
-  - ***[Gaussian Blur]*** ($\sigma_{blur}$) Spread of the bi-dimensional Gaussian image filter. The standard deviation of the Gaussian filter ($\sigma$) defined by the user is equal for all axes. The ***[Gaussian Blur]*** is used to improve the target symmetry.
+  - ***[Gaussian Blur]*** ($\sigma_{blur}$) Spread of the bi-dimensional Gaussian image filter. The standard deviation of the Gaussian filter ($\sigma$) defined by the user is equal for all axes. The ***[Gaussian Blur]*** improves the target symmetry.
     > **Note:** The ($\sigma_{blur}$) is automatically calculated from FFT maps, but users can set this value manually. 
   
   - ***[Axisymmetric Orientation]*** Definition of the axis of symmetry (or axisymmetric) to apply the Inverse Abel Transform. The axisymmetric can be Horizontal or Vertical (*default is Horizontal for Plasmas and Vertical for Gas/Vapor targets*) and the ***[Axisymmetric Position]*** is a pixel position on the accumulated phase map to apply the Abel inversion. This position is only for horizontal or vertical orientations. For *None (Hor. our Vert)* orientations the IAS code doesn't apply Abel Inversion. In this case, the density of the target is retrieved by approximation [[15]](#reference).
