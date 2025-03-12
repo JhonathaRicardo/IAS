@@ -1,0 +1,23 @@
+cff-version: 1.0.2
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Dos Santos"
+  given-names: "Jhonatha Ricardo"
+  orcid: "https://orcid.org/0000-0001-7877-0580"
+- family-names: "Zuffi"
+  given-names: "Armando V. F."
+  orcid: "https://orcid.org/0000-0001-5705-1499"
+- family-names: "Vieira"
+  given-names: "Nilson Dias"
+  orcid: "https://orcid.org/0000-0003-0092-9357"
+- family-names: "Maldonado"
+  given-names: "Edison P."
+  orcid: "https://orcid.org/0000-0002-9462-8151"
+- family-names: "Samad"
+  given-names: "Ricardo E."
+  orcid: "https://orcid.org/0000-0001-7762-8961"
+title: "IAS"
+version: 1.0.2
+doi: 10.5281/zenodo.13693200
+date-released: 2025-01-31
+url: "https://github.com/JhonathaRicardo/IAS
