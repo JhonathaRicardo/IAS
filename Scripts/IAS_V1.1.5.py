@@ -1,0 +1,1788 @@
+# Software: Interferometry Analysis Software (Version 1.1.5)
+# Authors: Jhonatha Ricardo dos Santos, Armando Zuffi, Ricardo Edgul Samad, Nilson Dias Vieira Junior, Giovanni Souza
+# Python 3.14.0
+# Last update: 2026_07_23
+
+# LYBRARIES
+# The Python Standard Library
+# PyAbel/PyAbel:v0.9.0rc1 from https://doi.org/10.5281/zenodo.7401589.svg
+# FreeSimpleGUI from https://pypi.org/project/FreeSimpleGUI/
+# Matplotlib from matplotlib.org
+# Scipy from scipy.org
+# Scikit-image from  https://doi.org/10.7717/peerj.453
+# Pillow (PIL Fork) 9.3.0 from pypi.org/project/Pillow
+from IASFunctions_V2 import *
+import abel
+import FreeSimpleGUI as sg
+import os
+import math
+import numpy as np
+import tempfile
+import matplotlib
+import matplotlib.pyplot as plt
+import warnings
+
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib import cm
+from matplotlib.colors import LinearSegmentedColormap, ListedColormap
+from scipy.ndimage import gaussian_filter, rotate
+from scipy.signal import peak_widths
+from PIL import Image, UnidentifiedImageError
+from skimage.restoration import unwrap_phase
+from skimage.registration import phase_cross_correlation
+#####################################################################
+NameVersion = "Interferometry Analysis Software (Version 1.1.5)"
+#####################################################################
+# Matplotlib Tk style
+matplotlib.use('TkAgg')
+warnings.filterwarnings("ignore")
+#Colormaps
+custom1_cmap = LinearSegmentedColormap.from_list('default', [(0,    'white'),(0.25, 'blue'), (0.40, 'green'),
+                                              (0.55, 'lime'), (0.70, 'yellow'), (0.85, 'orange'), (1, 'red')], N=512)
+custom2_cmap = custom1_cmap.reversed(name = 'default_r')
+
+custom3_cmap = ListedColormap(['white', 'blue', 'green', 'yellow', 'orange', 'red'], name = 'QntWhite')
+custom4_cmap = custom3_cmap.reversed(name='QntWhite_r')
+
+custom5_cmap = ListedColormap(['black', 'blue', 'green', 'yellow', 'orange', 'red'], name = 'QntBlack')
+custom6_cmap = custom3_cmap.reversed(name='QntBlack_r')
+
+matplotlib.colormaps.register(cmap=custom1_cmap)
+matplotlib.colormaps.register(cmap=custom2_cmap)
+matplotlib.colormaps.register(cmap=custom3_cmap)
+matplotlib.colormaps.register(cmap=custom4_cmap)
+matplotlib.colormaps.register(cmap=custom5_cmap)
+matplotlib.colormaps.register(cmap=custom6_cmap)
+#colormap
+cmapIAS = ['default','default_r', 'rainbow', 'rainbow_r', 'gist_rainbow', 'gist_rainbow_r', 'jet', 'jet_r',\
+           'QntWhite', 'QntWhite_r', 'QntBlack', 'QntBlack_r']
+
+# Font and theme of PysimpleGUI
+AppFont = 'Arial 16 bold'
+sg.theme('DarkGrey4')
+
+# Image files types
+file_types = [("SNP (*.snp)", "*.snp"), ("PNG (*.png)", "*.png"), ("TIF (*.tif)", "*.tif" ), ("All files (*.*)", "*.*")]
+# Temp files
+tmp_file = tempfile.NamedTemporaryFile(suffix=".png").name
+tmp_file2 = tempfile.NamedTemporaryFile(suffix=".png").name
+tmp_file_plot = 'temp_plot_abel.png'
+
+###############################################################################################
+# INITIAL PARAMETERS
+# Abel method
+pyabel_methods = ['three_point', 'two_point', 'onion_peeling', 'onion_bordas', 'basex']
+abel_method = 'three_point'
+# Image paths
+path1 = ''
+path2 = ''
+#
+path_files = []
+path_files2 = []
+# Physics Parametres
+lambda0 = '395'  # nm
+unc_lambda0 = '0'
+n_pass = '1'
+
+factor = '1.000'  # factor um/pixel
+polargas = '1.710'  # for N2 gas in A^3
+sigma_gfilter = '0'  # sigma of gauss function
+sigma_gblur = '5'  # sigma of gaussian blur
+centerfh = '0'  # Horizontal position of the gaussian filter application
+centerfv = '0'  # Vertical position of the gaussian filter application
+axis_pos = '0'  # Axisymmetrical position pixel
+base_ref = '5'
+# Image parameters
+h_prof = -1.0  # heigth null
+rotate_degree = 0.0  # angle to image rotation
+# Absolute error value = 0.5 pixel
+abs_std = 0.5
+#FFT Freq
+fpv = np.array([0, 0])
+fph = np.array([0, 0])
+# Initial values to cut image
+begin_x = '100'
+begin_y = '100'
+end_x = '300'
+end_y = '300'
+# Initial values of heigths for 1D analysis
+pos1 = '10'
+pos2 = '20'
+pos3 = '30'
+
+#ScreenDimension
+SCNwidth, SCNheight = SCNsize = sg.Window.get_screen_size()
+##############################################################################################
+#WINDOW DIMENSION (Default = 80%)
+WINwidth, WINheight = WINsize = (int(0.80*SCNwidth), int(0.80*SCNheight))
+##############################################################################################
+# Images Dimensions
+width, height = size = int(0.3*WINwidth), int(0.48*WINheight)  # Scale image - interferogram
+width2, height2 = size2 = int(0.16*WINwidth), int(0.27*WINheight)  # Scale image - Ref
+width3, height3 = size3 =  int(0.25*WINwidth), int(0.35*WINheight)  # Scale image - Result
+# Min and Max values of Interferogram Image
+minvalue_x, maxvalue_x, minvalue_y, maxvalue_y = 0, int(0.28*WINwidth), 0, int(0.5*WINheight)
+# Frame 1D visible
+visible_f1d = False
+###############################################################################################
+'''
+
+########################################################################################
+#Windows LAYOUTS
+Building frames for main windows
+########################################################################################
+'''
+
+# LAYOUT INTERFEROMETER IMAGE
+layout_frame_ImgSample = [
+    [sg.Image(size=size, background_color='black', key='image1',enable_events=True)],
+    [sg.Input(expand_x=True, disabled=True, key='file1', visible='True')],
+    [sg.Button('Open File(s)', font='Arial 10 bold'),
+     sg.Button('Rotate (°)', visible=True, font='Arial 10 bold', disabled=True),
+     sg.Input('0', size=(5, 1), key='-DEGREE-', enable_events=True),
+     sg.Text('Original Size (w,h):'),
+     sg.Text(text=size, key='-scale1-')],
+]
+# LAYOUT REFERENCE IMAGE
+layout_frame_ImgReference = [
+    [sg.Image(size=size2, background_color='black',
+              key='image2', enable_events=True)],
+    [sg.Input(expand_x=True, disabled=True, key='file2', visible='True')],
+    [sg.Button('Open Ref.', font='Arial 10 bold')],
+]
+# LAYOUT SELECT AREA OPTIONS
+layout_area_selection = [
+    [sg.Text('X Coord')],
+    [sg.Spin([i for i in range(minvalue_x, maxvalue_x + 1)], initial_value=begin_x, key='-BEGIN_X-', size=(5, 1),
+             enable_events=True),
+     sg.Spin([i for i in range(minvalue_x, maxvalue_x + 1)], initial_value=end_x, key='-END_X-', size=(5, 1),
+             enable_events=True)],
+
+    [sg.Text('Y Coord')],
+    [sg.Spin([i for i in range(minvalue_y, maxvalue_y + 1)], initial_value=begin_y, key='-BEGIN_Y-', size=(5, 1),
+             enable_events=True),
+     sg.Spin([i for i in range(minvalue_y, maxvalue_y + 1)], initial_value=end_y, key='-END_Y-', size=(5, 1),
+             enable_events=True)],
+    [sg.Text('')],
+    [sg.Text('BG Phase Fit. (%): ')],
+    [sg.Input(base_ref, size=(6, 1), key='-base_ref-', enable_events=True)],
+]
+# LAYOUT INPUT GAS AND RADIATION PARAMETERS
+layout_frame_gas = [
+     sg.Combo(['H2', 'N2', 'He', 'Ar', '--'], default_value='N2', key='-combogas-', enable_events=True),
+     sg.Text('         Polarizab. (Å³):'),
+     sg.Input(polargas, size=(6, 1), key='-polargas-', enable_events=True)],
+
+layout_input_parameters = [
+    [sg.Text('Scaling Factor (µm/pixel):         '),
+     sg.Input(factor, size=(6, 1), key='-factor-', enable_events=True)],
+    [sg.Text('')],
+    [sg.Text('Laser Wavelength λ (nm):         '),
+     sg.Input(lambda0, size=(6, 1), key='-lambda0-', enable_events=True)],
+    [sg.Text('Wavelength FWHM Δλ (nm):    '),
+     sg.Input(unc_lambda0, size=(6, 1), key='-unclambda0-', enable_events=True)],
+    [sg.Text('Probe Laser Passes:               '),
+     sg.Input(n_pass, size=(6, 1), key='-numberpass-', enable_events=True)],
+    [sg.Text('')],
+    [sg.Frame('Gas/Vapor', layout_frame_gas, title_location=sg.TITLE_LOCATION_TOP_LEFT,
+              key='framegas',vertical_alignment="left", font='Arial 10 bold', expand_x = True)],
+
+]
+# FREQ. FRAMES
+layout_frame_freq = [
+    [sg.Text('Freq. vx (pixel): '), sg.Checkbox('-vx       ', default=False, key='-oppositevx-',enable_events=True),
+     sg.Spin([i for i in range(minvalue_y, maxvalue_y + 1)], initial_value=0, size=(5, 1), key='-centerfv-',
+             enable_events=True) ],
+    [sg.Text('Freq. vy (pixel): '), sg.Checkbox('-vy       ', default=False, key='-oppositevy-',enable_events=True),
+     sg.Spin([i for i in range(minvalue_x, maxvalue_x + 1)], initial_value=0, size=(5, 1), key='-centerfh-',
+             enable_events=True) ],
+    [sg.Text('Filter Range  Δv (pixel):          '),
+     sg.Spin([i for i in range(0, maxvalue_x // 2)], initial_value=0, size=(5, 1), key='-sigma_gfilter-',
+             enable_events=True)]
+    ]
+# LAYOUT INPUT MEASUREMENT PARAMETERS
+layout_analysis_parameters = [
+    [sg.Frame('Filter Freq.', layout_frame_freq, title_location=sg.TITLE_LOCATION_TOP_LEFT,
+              key='framesteps', font='Arial 10 bold')],[sg.Text('')],
+    [sg.Text('Gaussian Blur σ (pixel):           '),
+     sg.Spin([i for i in range(0, maxvalue_x // 2)], initial_value=sigma_gblur, size=(5, 1), key='-sigma_gblur-',
+             enable_events=True)],
+    [sg.Text('Axisymmetric Orientation:'),
+     sg.Combo(['Vertical', 'Horizontal','None'], size=(9, 1), default_value='Vertical', enable_events = True, key='-comboaxisymm-')],
+    [sg.Text('Axisymetric Position (pixel):     ', key = '-text_axissymm-'),
+     sg.Spin([i for i in range(minvalue_x, maxvalue_x + 1)], initial_value=0, size=(5, 1), key='-axisymm_pos-',
+             enable_events=True)],
+    [sg.Text('Inverse Abel Method:      ', key = '-text_abelmethod-'),
+     sg.Combo(pyabel_methods, size=(10, 1), default_value='three_point', key='-comboabelmethod-', enable_events=True)]
+
+]
+# LAYOUT FRAME OF ALL INPUT OPTIONS
+layout_frame_Options = [
+    [sg.Text('Target Type:'),
+     sg.Combo(['Gas/Vapor', 'Plasma'], default_value='Gas/Vapor', enable_events = True, key='-combotype-')],
+    [sg.Frame('Select Area', layout_area_selection, title_location=sg.TITLE_LOCATION_TOP,
+              vertical_alignment="top", font='Arial 10 bold', expand_y = True),
+     sg.Frame('Input Parameters', layout_input_parameters,  title_location=sg.TITLE_LOCATION_TOP,
+              vertical_alignment="top", font='Arial 10 bold', expand_y = True),
+     sg.Frame('Analysis Parameters', layout_analysis_parameters, title_location=sg.TITLE_LOCATION_TOP,
+              vertical_alignment="top", font='Arial 10 bold', expand_y = True)],
+]
+# LAYOUT FRAME LEFT - INPUTS
+layout_frame_ImagesL = [
+    [sg.Frame("Interferogram (Target)", layout_frame_ImgSample, title_location=sg.TITLE_LOCATION_TOP,
+              font='Arial 12 bold', element_justification='c', expand_x = True)],
+]
+# LAYOUT FRAME RIGHT - INPUTS AND APPLY
+layout_frame_ImagesR = [
+    [sg.Frame("Interferogram (Ref.)", layout_frame_ImgReference, title_location=sg.TITLE_LOCATION_TOP,
+              element_justification='c', vertical_alignment="top", font='Arial 12 bold', expand_x = True)],
+
+    [sg.Button('Analyse Data', size=(30, 6), font='Arial 12 bold', disabled=True, button_color='black', expand_x = True)],
+    [sg.Button('Clear', size=(30, 2), button_color='gray', font='Arial 10 bold', expand_x = True)]
+]
+# lAYOUT GLOBAL INPUTS
+layout_frame_Images = [
+    [sg.Column(layout_frame_ImagesL, element_justification='c', expand_x = True ),
+     sg.Column(layout_frame_ImagesR, element_justification='c', expand_x = True)],
+    [sg.Frame("Options", layout_frame_Options, title_location=sg.TITLE_LOCATION_TOP_LEFT,
+              element_justification='c', font='Arial 12 bold', expand_x=True, expand_y=True)],
+]
+# LAYOUT 1D OPTIONS PLOT
+layout_frame_plot1D = [
+    [
+     sg.Text('Axis:'),
+     sg.Combo(['Horizontal','Vertical'], size=(9, 1), default_value='Horizontal',
+              readonly = False, enable_events = True, key='-comboaxisprof-'),
+     sg.Text('  '),
+     sg.Checkbox('Prof. 1 (µm)', default=False, key='-checkpos1-', enable_events=True),
+     sg.Input(pos1, size=(4, 1), key='-pos1-', enable_events=True),
+     sg.Checkbox('Prof. 2 (µm)', default=False, key='-checkpos2-', enable_events=True),
+     sg.Input(pos2, size=(4, 1), key='-pos2-', enable_events=True),
+     sg.Checkbox('Prof. 3 (µm)', default=False, key='-checkpos3-',enable_events=True),
+     sg.Input(pos3, size=(4, 1), key='-pos3-', enable_events=True)],
+    [sg.Slider(key='sliderh', range=(0, 100), orientation='h', default_value=0,
+               enable_events=True, expand_x = True)]
+]
+# LAYOUT STAGES OF THE TREATMENT
+layout_frame_Steps = [
+    [sg.Radio('Frequency \nDomain', "radiostg", default=False, key='fftradio', enable_events=True),
+     sg.Radio('Gaussian \nFilter', 'radiostg', default=False, key='filterradio', enable_events=True),
+     sg.Radio('Acc. \nPhase-shift (ϕ)', "radiostg", default=True, key='phaseradio', enable_events=True),
+     sg.Radio('Radial \nPhase-shift (φ)', "radiostg", default=False, key='abelradio', enable_events=True),
+     sg.Radio('Density \nProfile', "radiostg", default=False, key='densradio', enable_events=True)],
+]
+# LAYOUT GLOBAL OUTPUTS
+layout_frame_Result = [
+    [sg.Frame('Stages', layout_frame_Steps, title_location=sg.TITLE_LOCATION_TOP_LEFT,
+              key='framesteps', font='Arial 10 bold', expand_x = True, element_justification='c')],
+    [sg.Button('1D Profile', size=(16, 2), font='Arial 10 bold', disabled=True),
+     sg.Button('2D Profile', size=(16, 2), font='Arial 10 bold', disabled=True),
+     sg.Checkbox('Unc. Measurement', default=False, key='-checkstd-', enable_events=True),
+     ],
+    [sg.Canvas(key='canvasabel', size=size3, background_color='black', expand_x = True, expand_y = True)],
+    [sg.Button('Save Image', size=(16, 2), disabled=True, font='Arial 10 bold'),
+     sg.Button('Save Data', size=(16, 2), disabled=True, font='Arial 10 bold'),
+     sg.Text('Colormap :'),
+     sg.Combo(cmapIAS, default_value='default', key='-cmapcombo-',
+              enable_events=True)],
+    [sg.Frame('1D Profile', layout_frame_plot1D, title_location=sg.TITLE_LOCATION_TOP_LEFT,
+              visible=True, key='frame1d', font='Arial 10', expand_x = True)],
+]
+# lAYOUT GLOBAL
+layout = [
+    [sg.Frame("Interferograms", layout_frame_Images,size = (int(0.55*WINwidth), int(WINheight)), font='Arial 12 bold', expand_x = True, element_justification='c'),
+     sg.Frame("Target Profile", layout_frame_Result, size = (int(0.45*WINwidth), int(WINheight)), title_location=sg.TITLE_LOCATION_TOP,
+              font='Arial 12 bold', expand_x = True)],
+]
+######################################################################################################################
+window = sg.Window(NameVersion, layout, margins=(5, 5), finalize=True, resizable=True)
+#window.Maximize()
+######################################################################################################################
+'''
+####################################################################################################
+#WINDOWS EVENT
+####################################################################################################
+'''
+#markers
+mouse_draw = False
+mclick = False
+
+#Bind
+window['image1'].bind('<ButtonPress-1>', '-click1-')
+window['image1'].bind('<ButtonRelease-1>', '-click2-')
+window['-BEGIN_X-'].bind('<FocusOut>', 'FocusOut')
+window['-END_X-'].bind('<FocusOut>', 'FocusOut')
+window['-BEGIN_Y-'].bind('<FocusOut>', 'FocusOut')
+window['-END_Y-'].bind('<FocusOut>', 'FocusOut')
+
+#window['frame1d'].update(visible=False)
+#EVENTS
+window.move(int((SCNwidth-WINwidth)/2), int((SCNheight-WINheight)/2))
+
+while True:
+    event, values = window.read()
+    #######################################################################
+    # Removing temp files when the main window is closed
+    if event == sg.WINDOW_CLOSED:
+        if '_temp.png' in path1:
+            os.remove(path1)
+            os.remove(path2)
+        break
+    #######################################################################
+    # TARGET TYPE
+    if event == '-combotype-':
+        if values['-combotype-'] == 'Plasma':
+            window['framegas'].update(visible=False)
+            window['-comboaxisymm-'].update('Horizontal')
+            window['-comboaxisprof-'].update('Vertical')
+            window['-oppositevx-'].update(True)
+            window['-oppositevy-'].update(True)
+
+        if values['-combotype-'] == 'Gas/Vapor':
+            window['framegas'].update(visible=True)
+            window['-comboaxisymm-'].update('Vertical')
+            window['-comboaxisprof-'].update('Horizontal')
+            window['-oppositevx-'].update(False)
+            window['-oppositevy-'].update(False)
+    #######################################################################
+    # FFT FREQUENCY
+    if event == '-oppositevx-' or event == '-oppositevy-':
+        window['-axisymm_pos-'].update('0')
+        if values['-oppositevy-'] == True:
+             window['-centerfh-'].update(str(fph[-1]))
+        else:
+             window['-centerfh-'].update(str(fph[0]))
+
+        if values['-oppositevx-'] == True:
+             window['-centerfv-'].update(str(fpv[-1]))
+        else:
+             window['-centerfv-'].update(str(fpv[0]))
+
+    #######################################################################
+    # CLEAR SCREEN INFO
+    if event == 'Clear':
+        if '_temp.png' in path1:
+            os.remove(path1)
+            os.remove(path2)
+
+        window['Rotate (°)'].update(disabled=True)
+        window['-DEGREE-'].update(visible=True)
+        window['Analyse Data'].update(disabled=True)
+
+        # Disable specific buttons and frames for 2D analysis
+        window['Save Data'].update(disabled=True)
+        window['Save Image'].update(disabled=True)
+        window['frame1d'].update(visible=False)
+        window['2D Profile'].update(disabled=True)
+        window['1D Profile'].update(disabled=True)
+        window['Rotate (°)'].update(disabled=True)
+        window['-DEGREE-'].update(visible=True)
+        window['Analyse Data'].update(disabled=True)
+        window['-oppositevx-'].update(False)
+        window['-oppositevy-'].update(False)
+
+        # Reset values
+        path1 = ''
+        path2 = ''
+        window['image1'].update(size=size, data='')
+        window['image2'].update(size=size2, data='')
+        window['file1'].update(path1)
+        window['file2'].update(path1)
+        window['-centerfh-'].update('0')
+        window['-centerfv-'].update('0')
+        window['-sigma_gfilter-'].update('0')
+        window['-axisymm_pos-'].update('0')
+
+        # Cleaning plots
+        try:
+            fig_canvas_agg.get_tk_widget().forget()
+        except:
+            plt.close('all')
+    #######################################################################
+    #MOUSE CLICK
+    if event == 'image1-click1-':
+        e = window['image1'].user_bind_event
+        if mclick == False:
+            window["-BEGIN_X-"].update(f'{e.x}')
+            window["-BEGIN_Y-"].update(f'{e.y}')
+            centerfh = 0
+            centerfv = 0
+            axis_pos = 0
+            window['-centerfh-'].update('0')
+            window['-centerfv-'].update('0')
+            window['-axisymm_pos-'].update('0')
+            mclick = True
+        else:
+            window["-END_X-"].update(f'{e.x}')
+            window["-END_Y-"].update(f'{e.y}')
+            mclick = False
+    if event == 'image1-click2-' and mclick == False:
+        if path1 != '' and path2 != '':
+            apply_drawing(values, window, tmp_file, size)
+    ########################################################################
+    # SYMMETRIC OR ASSYMETRIC TARGET ANALYSIS
+    if event == '-comboaxisymm-':
+        if values['-comboaxisymm-'] == 'None':
+            window['-text_axissymm-'].update('Target Thickness (µm):            ')
+            window['abelradio'].update(disabled=True)
+        else:
+            window['-text_axissymm-'].update('Axisymetric Position (pixel):     ')
+            window['abelradio'].update(disabled=False)
+    ########################################################################
+    # OPEN INTERFEROGRAM IMAGE
+    elif event == "Open File(s)":
+        if '_temp.png' in path1:
+            try:
+                os.remove(path1)
+            except UnidentifiedImageError:
+                continue
+
+        path_files = sg.popup_get_file("", no_window=True, multiple_files=True)
+        if path_files:
+            path1 = path_files[0]
+        else:
+            path1 = ''
+        window['file1'].update(path1)
+        # No file open
+        if path1 == '':
+            continue
+
+        # create PNG files from files SNP
+        # Note: files with SNP extension must be converted to PNG for algorithm analysis
+        if '.snp' in path1:
+            path_files_snp = path_files
+            path_files = []
+            for ipath in path_files_snp:
+                databinary = getBinaryData(ipath)
+                data0 = np.flip(databinary[60:60 + 720 * 576])
+                originaltgtsnp = Image.new(mode='L', size=(720, 576))
+                originaltgtsnp.putdata(data0)
+
+                ipath = ipath.replace('.snp', '_temp.png')
+
+                originaltgtpng = originaltgtsnp.save(ipath)
+                if len(path_files) == 0:
+                    path1 = ipath
+                    window['file1'].update(path1)
+
+                path_files.append(ipath)
+
+        elif ('.tif' or '.tiff') in path1:
+            path_files_tif = path_files
+            path_files = []
+            for ipath in path_files_tif:
+                ipath = ipath.replace('.snp', '_temp.png')
+                originaltgttif = normalize_to_256(ipath)
+                originaltgtpng = Image.fromarray(originaltgttif).save(ipath)
+
+                if len(path_files) == 0:
+                    path1 = ipath
+                    window['file1'].update(path1)
+
+                path_files.append(ipath)
+
+        try:
+            # Open Files
+            originaltgt0 = []
+            for i in range(0, len(path_files)):
+                originaltgt0.append(Image.open(path_files[i]))
+            apply_drawing(values, window, tmp_file, size)
+
+        except UnidentifiedImageError:
+            continue
+
+        # scale 1: scale for interferogram image
+        w, h = originaltgt0[0].size
+        scale = (width / w), (height / h)
+
+        im1 = originaltgt0[0].resize(size)
+
+        data1 = image_to_data(im1)
+
+        window['image1'].update(data=data1, size=size)
+        window['-scale1-'].update(originaltgt0[0].size)
+        centerfh = 0
+        centerfv = 0
+        axis_pos = 0
+        sigma_gfilter = 0
+        window['-centerfh-'].update('0')
+        window['-centerfv-'].update('0')
+        window['-axisymm_pos-'].update('0')
+        window['-sigma_gfilter-'].update('0')
+        # Enable buttons
+        if (len(path_files) != 0)  and (len(path_files2) != 0):
+            window['Rotate (°)'].update(disabled=False)
+            window['-DEGREE-'].update(visible=True)
+            window['Analyse Data'].update(disabled=False)
+
+    ########################################################################
+    # OPEN REFERENCE FILE
+    elif event == "Open Ref.":
+        if '_temp.png' in path2:
+            try:
+                os.remove(path2)
+            except UnidentifiedImageError:
+                continue
+
+        path_files2 = sg.popup_get_file("", no_window=True, multiple_files=True)
+        if path_files2:
+            path2 = path_files2[0]
+        else:
+            path2 = ''
+        window['file2'].update(path2)
+        # No file
+        if path2 == '':
+            continue
+        # Create PNG files from files SNP
+        if '.snp' in path2:
+            path_files_snp2 = path_files2
+            path_files2 = []
+            for ipath2 in path_files_snp2:
+                databinary2 = getBinaryData(ipath2)
+                data02 = np.flip(databinary2[60:60 + 720 * 576])
+                originalrefsnp = Image.new(mode='L', size=(720, 576))
+                originalrefsnp.putdata(data02)
+
+                ipath2 = ipath2.replace('.snp', '_temp.png')
+
+                originalrefpng = originalrefsnp.save(ipath2)
+                if len(path_files2) == 0:
+                    path2 = ipath2
+                    window['file2'].update(path2)
+
+                path_files2.append(ipath2)
+
+        elif ('.tif' or '.tiff') in path2:
+            path_files_tif2= path_files2
+            path_files2 = []
+            for ipath2 in path_files_tif2:
+                ipath2 = ipath2.replace('.snp', '_temp.png')
+                originalreftif = normalize_to_256(ipath2)
+                originalrefpng = Image.fromarray(originalreftif).save(ipath2)
+
+                if len(path_files) == 0:
+                    path2 = ipath2
+                    window['file2'].update(path2)
+
+                path_files2.append(ipath2)
+
+        try:
+            # Open Files
+            originalref0 = []
+            for i in range(0, len(path_files2)):
+                originalref0.append(Image.open(path_files2[i]))
+            apply_drawing(values, window, tmp_file, size)
+
+        except UnidentifiedImageError:
+            continue
+        w2, h2 = originalref0[0].size
+        scale2 = (width2 / w2), (height2 / h2)
+
+        im2 = originalref0[0].resize(size2)
+
+        data2 = image_to_data(im2)
+        window['image2'].update(data=data2, size=size2)
+        centerfh = 0
+        centerfv = 0
+        axis_pos = 0
+        sigma_gfilter = 0
+        window['-centerfh-'].update('0')
+        window['-centerfv-'].update('0')
+        window['-axisymm_pos-'].update('0')
+        window['-sigma_gfilter-'].update('0')
+
+        # Enable buttons
+        if (len(path_files) != 0) and (len(path_files2) != 0):
+            window['Rotate (°)'].update(disabled=False)
+            window['-DEGREE-'].update(visible=True)
+            window['Analyse Data'].update(disabled=False)
+    ########################################################################
+    # BUTTON COORD AREA / ROTATE
+    elif event == '-BEGIN_X-' or event == '-END_X-' or event == '-BEGIN_Y-' or event == '-END_Y-' or event == 'Rotate (°)':
+        apply_drawing(values, window, tmp_file, size)
+        centerfh = 0
+        centerfv = 0
+        axis_pos = 0
+        sigma_gfilter = 0
+        window['-centerfh-'].update('0')
+        window['-centerfv-'].update('0')
+        window['-axisymm_pos-'].update('0')
+        window['-sigma_gfilter-'].update('0')
+    elif event == '-BEGIN_X-FocusOut' or event == '-END_X-FocusOut' or event == '-BEGIN_Y-FocusOut' or event == '-END_Y-FocusOut':
+        centerfh = 0
+        centerfv = 0
+        axis_pos = 0
+        sigma_gfilter = 0
+        window['-centerfh-'].update('0')
+        window['-centerfv-'].update('0')
+        window['-axisymm_pos-'].update('0')
+        window['-sigma_gfilter-'].update('0')
+
+    '''
+    #################################################################################
+    # BUTTON APPLY - main event of window
+    In this event will be apply the treatment of interferogram image to generate
+    the data of target profile.  
+    #################################################################################
+    '''
+    #print(len(path_files),len(path_files2))
+    if (event == 'Analyse Data' or event == '-axisymm_pos-' or event == '-sigma_gblur-' \
+            or event == '-centerfh-' or event == '-centerfv-' or event == '-sigma_gfilter-') \
+        and (len(path_files) != 0) and (len(path_files2) != 0):
+
+        apply_drawing(values, window, tmp_file, size)
+        # Cleaning plots
+        try:
+            fig_canvas_agg.get_tk_widget().forget()
+        except:
+            plt.close('all')
+
+        # Input datas
+        h_prof = -1.0
+
+        try:
+
+            # get rectangle coord.
+            begin_x = int(get_value("-BEGIN_X-", values) / scale[0])
+            begin_y = int(get_value("-BEGIN_Y-", values) / scale[1])
+            end_x = int(get_value("-END_X-", values) / scale[0])
+            end_y = int(get_value("-END_Y-", values) / scale[1])
+
+
+            if begin_x > end_x:
+                begin_x = int(get_value("-END_X-", values) / scale[0])
+                end_x = int(get_value("-BEGIN_X-", values) / scale[0])
+                window["-END_X-"].update(int(begin_x * scale[0]))
+                window["-BEGIN_X-"].update(int(end_x * scale[0]))
+
+            elif begin_x == end_x:
+                end_x = begin_x + 100
+                window["-END_X-"].update(value=int(end_x * scale[0]))
+                window["-BEGIN_X-"].update(value=int(begin_x * scale[0]))
+
+            if begin_y > end_y:
+                begin_y = int(get_value("-END_Y-", values) / scale[1])
+                end_y = int(get_value("-BEGIN_Y-", values) / scale[1])
+                window["-END_Y-"].update(value=int(begin_y * scale[1]))
+                window["-BEGIN_Y-"].update(value=int(end_y * scale[1]))
+
+            elif begin_y == end_y:
+                end_y = begin_y + 100
+                window["-END_Y-"].update(value=int(end_y * scale[1]))
+                window["-BEGIN_Y-"].update(value=int(begin_y * scale[1]))
+
+            # get angle to image rotation
+            rotate_degree = float(get_value('-DEGREE-', values))
+            # get base ref %
+            base_ref = float(get_value('-base_ref-', values)) / 100
+            # get conversion factor in meters/pixel
+            factor = float(get_value('-factor-', values)) * 1e-6
+            # Manual definition of the filter position
+            centerfh = int(get_value("-centerfh-", values))
+            centerfv = int(get_value("-centerfv-", values))
+            sigma_gfilter = int(get_value('-sigma_gfilter-', values))
+            # sigma value of gaussian blur
+            sigma_gblur = int(get_value('-sigma_gblur-', values))
+            # Manual axisymm position
+            axis_pos = int(get_value('-axisymm_pos-', values)) # pixel
+            # heat gas constant
+            alpha_gas = float(get_value('-polargas-', values)) * 1e-30
+            # Wavelength laser
+            lambda0 = float(get_value('-lambda0-', values)) * 1e-9  # in meters
+            unc_lambda0 = float(get_value('-unclambda0-', values)) * 0.588705 * 1e-9  # sigma in meters
+            # number of probe passes
+            n_pass = int(get_value('-numberpass-', values))
+
+
+            if n_pass == 0:
+                n_pass = 1
+
+            # color map
+            newcmp = plt.colormaps[values['-cmapcombo-']].resampled(256)
+
+            #Constants
+            const_plasma = 1114854216171690.4
+            const_gas = 3 / (4 * np.pi * alpha_gas)
+
+
+            # Manual axisymm position
+            if values['-comboaxisymm-'] == 'None':
+                axis_pos = 0
+                thick_tgt = float(get_value('-axisymm_pos-', values))*1e-6/factor
+                std_thick_tgt = abs_std*thick_tgt/factor
+            else:
+                axis_pos = int(get_value('-axisymm_pos-', values))  # pixel
+                thick_tgt = 0
+
+        except:
+            sg.popup_error(f"WARNING: Data fields must have numerical values! ")
+            continue
+
+
+        # Input original files
+        phasemaps = []
+        tgt_dens, tgt_abelphasemap, tgt_phasemap = [], [], []
+        std_phasemap, std_abelmap, std_tgt_dens = [], [], []
+        originaltgt, originalref = [], []
+
+        for j in range(0, len(path_files)):
+            if len(path_files) == len(path_files2):
+                if rotate_degree != 0.0:
+                    originaltgt = rotate(originaltgt0[j], rotate_degree, reshape=False)
+                    originalref = rotate(originalref0[j], rotate_degree, reshape=False)
+                else:
+                    originalref = originalref0[j]
+                    originaltgt = originaltgt0[j]
+            else:
+                if rotate_degree != 0.0:
+                    print(rotate_degree)
+                    originaltgt = rotate(originaltgt0[j], rotate_degree, reshape=False)
+                    originalref = rotate(originalref0[0], rotate_degree, reshape=False)
+                else:
+                    originaltgt = originaltgt0[j]
+                    originalref = originalref0[0]
+
+            array_tgt = np.asarray(originaltgt)
+            array_ref = np.asarray(originalref)
+
+            if np.ndim(array_tgt) == 3:
+                # Slice image with 3 channels:only one channel is used to interferogram treatment
+                #intref0 = array_ref[:, :, 0]
+                #inttgt0 = array_tgt[:, :, 0]
+                intref0 = array_ref[0, :, :]
+                inttgt0 = array_tgt[0, :, :]
+            else:
+                intref0 = array_ref[:, :]
+                inttgt0 = array_tgt[:, :]
+
+            # select area of image
+            intref = intref0[begin_y:end_y, begin_x:end_x]
+            inttgt = inttgt0[begin_y:end_y, begin_x:end_x]
+
+
+            try:
+                # Apply Fast Fourier Transform on interferogram data arrays
+                fftref = np.fft.fft2(intref)  # ref. interferogram
+                ffttgt = np.fft.fft2(inttgt)  # gas interferogram
+                # Defining line or row to apply gaussian filter
+                fftmap = np.log(np.abs(ffttgt))
+                nlmap, nrmap = np.shape(fftmap)
+            except:
+                fftref = np.zeros(np.shape(size1))  # ref. interferogram
+                ffttgt = np.zeros(np.shape(size1))  # gas interferogram
+                # Defining line or row to apply gaussian filter
+                fftmap = np.zeros(np.shape(size1))
+                nlmap, nrmap = np.shape(fftmap)
+
+            '''
+            # Authomatic definition of the gaussian filter position: 
+            this position are defined like the line or column (Vertical or horizontal fringes) with more intensity pixel
+            values. This way, this positions are defined using the maximum value of horizontal/vertical pixels sum, 
+            depending on fringes orientation.
+            Note: Case this filter position is not found, the process is interrupted and the user must select another
+            file or another area of interferogram.
+            '''
+            fftmap = (fftmap - np.min(fftmap)) * np.ones(np.shape(fftmap)) / (np.max(fftmap) - np.min(fftmap))
+
+            summaph,fph, summapv, fpv, centerfh, centerfv, f_range, fang_deg =\
+                func_cfilter(fftmap, centerfh,centerfv, values['-oppositevy-'], values['-oppositevx-'])
+
+
+            window['-centerfh-'].update(str(centerfh))
+            window['-centerfv-'].update(str(centerfv))
+
+            # Creating filter array from null array
+            gfilter, sigma_gfilter = func_gfilter(fftref, centerfh, centerfv, f_range, sigma_gfilter)
+            window['-sigma_gfilter-'].update(str(sigma_gfilter))
+
+            # Applying Inverse FFT in resultant array obtained after use of the gaussian filter on FFT arrays
+            ifftref = np.fft.ifft2(gfilter * fftref)
+            iffttgt = np.fft.ifft2(gfilter * ffttgt)
+
+            # Creating Phase Maps arrays by subtracting the arguments of IFFT arrays
+            phasemaps = (np.angle(iffttgt) - np.angle(ifftref))
+            # Unwrap phase:
+            uwphasemap = unwrap_phase(phasemaps)
+
+            '''         
+            ##########################################################################################
+            DEFINING STANDARD DEVIATION:
+            The standard deviation is calculated from fringes intensity distribution, fringes widths and 
+            fringes displacement.
+            #########################################################################################
+            '''
+
+            # Estimating displacement (vertical and horizontal) between interferograms
+            try:
+                disp_xy, _, _ = phase_cross_correlation(inttgt0, intref0, upsample_factor=100)
+            except:
+                disp_xy = np.array([0.0, 0.0])
+            # Absolute displacement
+            disp = np.sqrt(disp_xy[0] ** 2 + disp_xy[1] ** 2)
+
+            # Creating 2D array for fringes width distribution
+            fdist_tgt, std_fdist_tgt = fringes_width(inttgt, int(fang_deg))
+            fdist_ref, std_fdist_ref = fringes_width(intref, int(fang_deg))
+            try:
+                std_phasemap_1 = np.sqrt(np.square(abs_std / fdist_tgt) + np.square(abs_std / fdist_ref) + \
+                                 np.square(disp /fdist_tgt))
+
+            except:
+
+                std_phasemap_1 = np.zeros(np.shape(intref))
+
+            '''
+            ################################################################################
+            Applying Inverse Abel Transform (IAT):
+            The IAT is applied using Dash Onion Peeling algorithm from PyAbel. To apply its library correctly is necessary
+            to define a axis symmetric in image (Horizontal or Vertical) and it is defined from more intensity pixel range. 
+            So, the image is cut according axissymetric.
+            NOTE: the Abel transform is always performed around the vertical axis, so when the image have horizontal
+            axissymmetry the matrix must be transposed.
+
+            '''
+            #breakpoint()
+            # Transpose Matrix for Horizontal Axissmetry
+            if values['-comboaxisymm-'] == 'Horizontal':
+                uwphasemap = np.transpose(uwphasemap)
+                std_phasemap_1 = np.transpose(std_phasemap_1)
+
+            nlines, nrows = np.shape(uwphasemap)
+
+            #######################################################################################################
+            #EXTRACT PHASE FROM BG FOR GAS/VAPOR OR PLASMA
+            if values['-combotype-'] == 'Gas/Vapor':
+                # Verify Baseline upper to phase
+                baselinemap, std_blmap = baseline2D_gas(uwphasemap, base_ref)
+
+                resultphase = (uwphasemap - baselinemap) - np.min(uwphasemap - baselinemap) \
+                              * np.ones(np.shape(uwphasemap))
+
+            if values['-combotype-'] == 'Plasma':
+                baselinemap, std_blmap = baseline2D_plasma(uwphasemap, base_ref)
+
+                resultphase = (uwphasemap - baselinemap) - np.min(uwphasemap - baselinemap) * np.ones(np.shape(uwphasemap))
+
+                # Verify Baseline upper to phase
+                index_max = np.unravel_index(np.argmax(np.abs(resultphase)), np.shape(resultphase))
+                if resultphase[index_max] > 0:
+                    resultphase = (-1) * resultphase
+
+            '''
+            ##################################################################################################
+            #BREAKPOINT FOR TESTS
+            ##################################################################################################
+            #Breakpoint()
+            #.dat Files for manuscript
+            fdist_tgt_print = (gaussian_filter(fdist_tgt, sigma=5))
+            fdist_ref_print = (gaussian_filter(fdist_ref, sigma=5))
+            #resultphase = (gaussian_filter(resultphase, sigma=sigma))
+
+            np.savetxt('fdist_tgt.dat', fdist_tgt_print, fmt='%.3e')
+            np.savetxt('fdist_ref.dat', fdist_ref_print, fmt='%.3e')
+            #np.savetxt('phasemap-bg pos00.dat', resultphase, fmt='%.3e')
+            ##################################################################################################
+            '''
+            #######################################################################################################
+            # PHASEMAP E STD PHASEMAP
+
+            # First contribution: Experimental + baseline
+            std_phasemap_i = np.sqrt(np.square(std_blmap * np.ones(np.shape(resultphase))) + np.square(std_phasemap_1))
+
+            #breakpoint()
+            # Apply gaussian blur
+            phasemap_corr = (gaussian_filter(resultphase, sigma=sigma_gblur))
+
+            std_phasemap_corr = (gaussian_filter(std_phasemap_i, sigma=sigma_gblur))
+
+            #normalizing the std phase values from std phase without gaussian blur
+            if sigma_gblur > 0:
+                norm_std = (std_phasemap_corr-np.min(std_phasemap_corr))/(np.max(std_phasemap_corr)-np.min(std_phasemap_corr))
+                #norm_std = (std_phasemap_corr)/(np.max(std_phasemap_corr))
+                std_phasemap_corr = np.min(std_phasemap_i) + (np.max(std_phasemap_i)-np.min(std_phasemap_i))*norm_std
+
+            '''
+            ########################################################################################
+            DENSITY CALCULATION.        
+            ########################################################################################
+            '''
+            ########################################################################################
+            # ASYMMETRICAL TARGET
+            ########################################################################################
+            if values['-comboaxisymm-'] == 'None':
+
+                phasemap_symm = np.zeros(np.shape(uwphasemap))
+                std_phasemap_symm = np.zeros(np.shape(uwphasemap))
+                std_abelmap_2 = np.zeros(np.shape(uwphasemap))
+                phase_abel = np.zeros(np.shape(uwphasemap))
+                norm_phasemap = np.zeros(np.shape(uwphasemap))
+
+                # no side cut to Abel (%)
+                side_cut = 0
+                # Target thikness
+                if thick_tgt == 0:
+                    thick_tgt = 1
+                    window['-axisymm_pos-'].update(thick_tgt)
+
+                phase_abel0 = phasemap_corr/(thick_tgt)
+                phase_abel = phase_abel0
+
+                std_abel = std_phasemap_corr/(thick_tgt)
+                std_abelmap_2 = np.zeros(np.shape(std_abel))
+
+                # new matrix size for plot
+                rangeh, rangev = np.shape(phase_abel)
+                '''
+                ########################################################################################
+                Calculating refraction index and plasma/gas density from IAT phasemap.        
+                '''
+                # Calculating index refraction from IAT of phasemap
+                n_index = (1 + (phase_abel0 * lambda0) / (2 * np.pi * factor))
+
+            #####################################################################################################
+            # Data processing for symmetrical targets
+            else:
+
+                # Apply gaussian filter to define the region with more intensity pixel value
+                # Define region with more intensity pixel - position x and y
+                if axis_pos == 0:
+                    try:
+                        cline, crow = np.where(np.abs(phasemap_corr) >= np.max(np.abs(phasemap_corr)) * 0.98)
+                        cx = int(np.median(crow))
+                    except:
+                        cx = np.unravel_index(np.argmax(np.abs(phasemap_corr), axis=None), phasemap_corr.shape)[1]
+
+                if axis_pos != 0:
+                    if np.shape(phasemaps) == np.shape(uwphasemap):
+                        cx = axis_pos
+                    else:
+                        cx = nrows - axis_pos
+
+                # If the region not found, set symmetric point like half image
+                if math.isnan(cx) == True:
+                    cx = int(nrows / 2)
+
+                if cx <= int(nrows / 2):
+                    vert_lim = int(2 * cx + 1)
+                    phasemap_symm = phasemap_corr[:, 0:vert_lim]
+                    std_phasemap_symm = std_phasemap_corr[:, 0:vert_lim]
+
+                # If right-side of image is more width
+                if cx > int(nrows / 2):
+                    vert_lim = int(2 * cx - nrows)
+                    phasemap_symm = phasemap_corr[:, vert_lim:]
+                    std_phasemap_symm = std_phasemap_corr[:, vert_lim:]
+
+                # Creating axisymetric line in plot
+                if np.shape(phasemaps) == np.shape(uwphasemap):
+                    axis_pos = cx
+                else:
+                    axis_pos = nrows - cx
+
+                window['-axisymm_pos-'].update(axis_pos)
+
+                try:
+                    abel_method = values['-comboabelmethod-']
+                    # Applying inverse Abel Transform
+                    phase_abel0 = abel.Transform((phasemap_symm), symmetry_axis=0, direction='inverse',
+                                                 method=abel_method).transform
+
+                    std_abel0 = abel.Transform((std_phasemap_symm), symmetry_axis=0, direction='inverse',
+                                                 method=abel_method).transform
+
+                except:
+
+                    phase_abel0 = np.zeros(np.shape(phasemap_corr[:, 0:vert_lim]))
+                    std_abel0 = np.zeros(np.shape(phasemap_corr[:, 0:vert_lim]))
+                    sg.popup_error(f"WARNING: Unable to apply the Abel transform to the selected image! ")
+                    continue
+
+                '''
+                ############################################################################################
+                Calculating std from Abel Transform:
+                The std is calculated using deviation of mormalized phasemap and normalized IAT phasemap  
+                '''
+                rangeh0, rangev0 = np.shape(phase_abel0)
+                # side cut to Abel (%)
+                side_cut = int(0.05 * rangev0)
+
+                phase_abel = phase_abel0[:, side_cut: -side_cut]
+                std_abel = std_abel0[:, side_cut: -side_cut]
+
+                norm_phasemap = np.zeros(np.shape(phase_abel))
+
+                for k in range(0, rangeh0):
+
+                    try:
+                        norm_phasemap[k] = phasemap_symm[k, side_cut: -side_cut]\
+                                           * np.max(abs(phase_abel[k, :])) \
+                                           / np.max(abs(phasemap_symm[k, side_cut: -side_cut]))
+
+                    except:
+                        norm_phasemap[k] = np.zeros(np.shape(phase_abel[k, :]))
+
+                std_abelmap_2 = np.sqrt(np.square(phase_abel - norm_phasemap))
+
+                # new matrix size for plot
+                rangeh, rangev = np.shape(phase_abel)
+                '''
+                ########################################################################################
+                Calculating refraction index and plasma/gas density from IAT phasemap.        
+                '''
+                # Calculating index refraction from IAT of phasemap
+                n_index0 = (1 + (phase_abel0 * lambda0) / (2 * np.pi * factor))
+                # Cutting border of images due the computational artefacts generated by IAT and problems with no symmetric images
+                n_index = n_index0[:, side_cut: -side_cut]
+
+            #######################################################################################
+            # STANDARD DEVIATION OF PHASE
+            #######################################################################################
+            # Contribution 1: measurement interferogram
+            std_phase1 = np.sqrt(np.square(std_abel / factor))  # rad/m
+
+            # Contribution 2: Phase
+            std_phase2 = abs(std_abelmap_2 / factor)  # rad/m
+
+            std_phase = np.sqrt(np.square(std_phase1) + np.square(std_phase2))  # rad/m
+
+
+            #######################################################################################
+            # GAS DENSITY
+            #######################################################################################
+            if values['-combotype-'] == 'Gas/Vapor':
+                try:
+                    tgt_dens_i = const_gas * ((n_index ** 2 - 1) / (n_index ** 2 + 2)) * 1e-6 /n_pass  # cm-3
+
+                except:
+                    tgt_dens_i = np.zeros(np.shape(phase_abel))
+
+                #######################################################################################
+                # STANDARD DEVIATION OF GAS DENSITY
+                dN_phase = (lambda0 / (2 * np.pi)) * np.ones(np.shape(phase_abel))  # rad
+
+                # Contribution 3: laser wavelength
+                dN_lambda = (phase_abel / (2 * np.pi * factor))  # rad/m
+
+                std_tgt_dens_i = const_gas * np.sqrt(np.square(dN_phase * std_phase) + \
+                                np.square(dN_lambda * unc_lambda0)) * 1e-6/n_pass
+                #######################################################################################
+
+            #######################################################################################
+            # PLASMA
+            #######################################################################################
+            if values['-combotype-'] == 'Plasma':
+                try:
+                    tgt_dens_i = (const_plasma * ((np.ones(np.shape(n_index))) - np.square(n_index))) \
+                                 / (lambda0 * lambda0) * 1e-6 / n_pass # cm-3
+
+                except:
+                    tgt_dens_i = np.zeros(np.shape(phase_abel))
+
+                #######################################################################################
+                # STANDARD DEVIATION OF PLASMA DENSITY
+                dN_phase =  (1 / (np.pi * lambda0) + phase_abel / (2 * np.pi ** 2 * factor))  # rad
+
+                # Contribution 3: laser wavelength
+                dN_lambda = (phase_abel / (np.pi * np.square(lambda0) * factor))  # rad/m
+
+                std_tgt_dens_i = const_plasma * np.sqrt(np.square(dN_phase * std_phase) + \
+                              np.square(dN_lambda * unc_lambda0)) * 1e-6 / n_pass
+
+            #######################################################################################
+            #MATRIX RESULTS
+            #Transpose Matrix with horizontal symmetry
+            if values['-comboaxisymm-'] == 'Horizontal':
+                phasemap_corr = np.transpose(phasemap_corr)
+                phase_abel = np.transpose(phase_abel)
+                std_abelmap_2 = np.transpose(std_abelmap_2)
+                std_phase = np.transpose(std_phase)
+                std_phase1 = np.transpose(std_phase1)
+                std_tgt_dens_i = np.transpose(std_tgt_dens_i)
+                tgt_dens_i = np.transpose(tgt_dens_i)
+                std_phasemap_corr = np.transpose(std_phasemap_corr)
+                norm_phasemap = np.transpose(norm_phasemap)
+
+            tgt_phasemap.append(phasemap_corr)
+            std_phasemap.append(std_phasemap_corr)
+
+            tgt_abelphasemap.append(phase_abel)
+            std_abelmap.append(std_abelmap_2)
+
+            tgt_dens.append(tgt_dens_i)
+            std_tgt_dens.append(std_tgt_dens_i)
+
+        # BUILDING 2D ARRAYS RESULTS FOR:
+        if len(tgt_phasemap) > 1:  # Many files
+            # PHASEMAP
+            tgt_phasemap_mean = mean_maps(tgt_phasemap)
+            std_phasemap_mean = np.sqrt(np.square(mean_maps(std_phasemap)) + \
+                                        np.square(std_maps(tgt_phasemap, tgt_phasemap_mean)))
+            # INV. ABEL TRANSF. MAP
+            tgt_abelmap_mean = mean_maps(tgt_abelphasemap)
+            std_abelmap_mean = np.sqrt(np.square(mean_maps(std_abelmap)) + \
+                                       np.square(std_maps(tgt_abelphasemap, tgt_abelmap_mean)))
+            # PLASMA DENSITY
+            tgt_dens_mean = mean_maps(tgt_dens)
+            std_dens_mean = np.sqrt(np.square(mean_maps(std_tgt_dens)) + \
+                                    np.square(std_maps(tgt_dens, tgt_dens_mean)))
+        else:
+            try:
+                # PHASEMAP
+                tgt_phasemap_mean = tgt_phasemap[0]
+                std_phasemap_mean = std_phasemap[0]
+                # INV. ABEL TRANSF. MAP
+                tgt_abelmap_mean = tgt_abelphasemap[0]
+                std_abelmap_mean = std_abelmap[0]
+                # PLASMA DENSITY
+                tgt_dens_mean = tgt_dens[0]
+                std_dens_mean = std_tgt_dens[0]
+            except:
+                # PHASEMAP
+                tgt_phasemap_mean = np.zeros(np.shape(fftmap))
+                std_phasemap_mean = np.zeros(np.shape(fftmap))
+                # INV. ABEL TRANSF. MAP
+                tgt_abelmap_mean = np.zeros(np.shape(fftmap))
+                std_abelmap_mean = np.zeros(np.shape(fftmap))
+                # PLASMA DENSITY
+                tgt_dens_mean = np.zeros(np.shape(fftmap))
+                std_dens_mean = np.zeros(np.shape(fftmap))
+        ###############################################################################################################
+        '''
+        ###############################################################################################################
+        #BUILDING 2D AND 1D PLOTS
+        ###############################################################################################################
+        '''
+        ###############################################################################################################
+        # 2D PLOTS
+
+        # Plots are building from user select
+        if values['fftradio'] == True:  # Plot FFT map result
+            matrix_plot = fftmap
+            indmax = np.zeros(2)
+
+        elif values['filterradio'] == True:  # Plot gaussian filter map
+            matrix_plot = gfilter
+            indmax = np.zeros(2)
+
+        elif values['phaseradio'] == True:  # Plot phase map result
+            try:
+                if values['-combotype-'] == 'Plasma':
+                    maxval = np.min(tgt_phasemap_mean)
+                    indmax = np.unravel_index(np.argmin(tgt_phasemap_mean, axis=None), tgt_phasemap_mean.shape)
+                    maxstd = std_phasemap_mean[indmax]
+                elif values['-combotype-'] == 'Gas/Vapor':
+                    maxval = np.max(tgt_phasemap_mean)
+                    indmax = np.unravel_index(np.argmax(tgt_phasemap_mean, axis=None), tgt_phasemap_mean.shape)
+                    maxstd = std_phasemap_mean[indmax]
+            except:
+                maxval = 0
+                maxstd = 0
+
+            strmax = r'$\phi_{max}=%.3f \pm %.3f$' % (maxval, maxstd)
+
+            if values['-checkstd-'] == False:
+                matrix_plot = tgt_phasemap_mean
+            else:
+                matrix_plot = std_phasemap_mean
+
+        elif values['abelradio'] == True:  # Plot gas density profile from IAT
+            # max abs value and max abs position of phase
+            try:
+                if values['-combotype-'] == 'Plasma':
+                    maxval = np.min(tgt_abelmap_mean)
+                    indmax = np.unravel_index(np.argmin(tgt_abelmap_mean, axis=None), tgt_abelmap_mean.shape)
+                    maxstd = std_abelmap_mean[indmax]
+                elif values['-combotype-'] == 'Gas/Vapor':
+                    maxval = np.max(tgt_abelmap_mean)
+                    indmax = np.unravel_index(np.argmax(tgt_abelmap_mean, axis=None), tgt_abelmap_mean.shape)
+                    maxstd = std_abelmap_mean[indmax]
+            except:
+                maxval = 0
+                maxstd = 0
+
+            strmax = r'$\varphi_{r.max}=%.5f \pm %.5f$' % (maxval, maxstd)
+            if values['-checkstd-'] == False:
+                matrix_plot = tgt_abelmap_mean
+            else:
+                matrix_plot = std_abelmap_mean
+
+        elif values['densradio'] == True:  # Plot gas density profile
+            # max abs value and max abs position of phase
+            try:
+                maxval = np.max(tgt_dens_mean)
+                indmax = np.unravel_index(np.argmax(tgt_dens_mean, axis=None), tgt_dens_mean.shape)
+                maxstd = 100 * std_dens_mean[indmax] / maxval
+            except:
+                maxval = 0
+                maxstd = 0
+            strmax = r'$\rho_{max}=%.2e (\pm %.1f\%%)$' % (maxval, maxstd)
+
+            if values['-checkstd-'] == False:
+                matrix_plot = tgt_dens_mean
+            else:
+                matrix_plot = std_dens_mean
+
+        # Creating plot figure parameters
+        fig, ax1 = plt.subplots(figsize=(6, 5))
+
+        #
+        if values['filterradio'] == True or values['fftradio'] == True:
+            ax1.set_xlabel(r'$\nu_x\hspace{.5}(arb.u.)$', fontsize=12)
+            ax1.set_ylabel(r'$\nu_y\hspace{.5}(arb.u.)$', fontsize=12)
+            ax1.imshow(matrix_plot, cmap='gray')
+            if values['fftradio'] == True:
+                if centerfh != 0:
+                    ax1.axhline(y=centerfh, lw=1, alpha=0.5, color='red')
+                if centerfv != 0:
+                    ax1.axvline(x=centerfv, lw=1, alpha=0.5, color='red')
+        else:
+            divider = make_axes_locatable(ax1)
+            extentplot = np.shape(matrix_plot)
+            x_max = extentplot[1] * factor * 1e6
+            y_max = extentplot[0] * factor * 1e6
+
+            # X and Y labels
+            if values['-comboaxisymm-'] == 'Horizontal' and values['phaseradio'] == False:
+                axisext = [0, x_max, -y_max / 2, y_max / 2]
+                xlabel = r'$x\hspace{.5}(\mu m)$'
+                ylabel = r'$r\hspace{.5}(\mu m)$'
+            elif values['-comboaxisymm-'] == 'Vertical' and values['phaseradio'] == False:
+                axisext = [-x_max / 2, x_max / 2, 0, y_max]
+                xlabel = r'$r\hspace{.5}(\mu m)$'
+                ylabel = r'$y\hspace{.5}(\mu m)$'
+            else:
+                axisext = [0, x_max, 0, y_max]
+                xlabel = r'$x\hspace{.5}(\mu m)$'
+                ylabel = r'$y\hspace{.5}(\mu m)$'
+
+            cax = divider.append_axes("right", size="5%", pad=0.05)
+            abel_plot = ax1.imshow(matrix_plot, extent=axisext, cmap=newcmp)
+            cb1 = fig.colorbar(abel_plot, cax=cax)
+            ax1.set_xlabel(xlabel, fontsize=12)
+            ax1.set_ylabel(ylabel, fontsize=12)
+            ax1.set_title(strmax, fontsize=10, pad=20)
+
+            if values['phaseradio'] == True:
+                if values['-checkstd-'] == False:
+                    cb1.set_label(label=r'$\phi\hspace{.5} (rad)$', size=12, weight='bold')
+                else:
+                    cb1.set_label(label=r'$\sigma_{\phi}\hspace{.5} (rad)$', size=12, weight='bold')
+                if values['-comboaxisymm-'] == 'Horizontal':
+                    ax1.axhline(y=axis_pos * factor * 1e6, lw=1, ls='--', alpha=0.5, color='black')
+                elif values['-comboaxisymm-'] == 'Vertical':
+                    ax1.axvline(x=axis_pos * factor * 1e6, lw=1, ls='--', alpha=0.5, color='black')
+
+            elif values['densradio'] == True:
+                if values['-checkstd-'] == False:
+                    cb1.set_label(label=r'$\rho\hspace{.5} (cm^{-3})$', size=12, weight='bold')
+                else:
+                    cb1.set_label(label=r'$\sigma_{\rho}\hspace{.5} (cm^{-3})$', size=12, weight='bold')
+
+            elif values['abelradio'] == True:
+                if values['-checkstd-'] == False:
+                    cb1.set_label(label=r'$\varphi_r\hspace{.5} (rad/ \mu m)$', size=12, weight='bold')
+                else:
+                    cb1.set_label(label=r'$\sigma_{\varphi_{r}}\hspace{.5} (rad/ \mu m)$', size=12, weight='bold')
+
+        fig.tight_layout(pad=2)
+        fig_canvas_agg = draw_figure(window['canvasabel'].TKCanvas, fig)
+
+        visible_f1d = False
+        # Enable/Disable specific buttons and frames for 2D analysis
+        window['Save Data'].update(disabled=False)
+        window['Save Image'].update(disabled=False)
+        window['frame1d'].update(visible=False)
+        window['2D Profile'].update(disabled=False)
+        window['1D Profile'].update(disabled=False)
+
+
+    #########################################################################
+    # BUTTON DENS.PROFILE 2
+    #########################################################################
+    if event == '2D Profile':
+        visible_f1d = False
+        window['frame1d'].update(visible=False)
+
+    if (event == '2D Profile' or event == 'fftradio' or event == 'filterradio' or event == 'phaseradio'\
+        or event == 'abelradio' or event == 'densradio' or event == '-checkstd-') and visible_f1d == False:
+
+        # Cleaning plots
+        try:
+            fig_canvas_agg.get_tk_widget().forget()
+        except:
+            plt.close('all')
+        # set height position
+        h_prof = -1.0
+
+        # Plots are building from user select
+        if values['fftradio'] == True:  # Plot FFT map result
+            matrix_plot = fftmap
+            indmax = np.zeros(2)
+
+        elif values['filterradio'] == True:  # Plot gaussian filter map
+            matrix_plot = gfilter
+            indmax = np.zeros(2)
+
+        elif values['phaseradio'] == True:  # Plot phase map result
+            try:
+                if values['-combotype-'] == 'Plasma':
+                    maxval = np.min(tgt_phasemap_mean)
+                    indmax = np.unravel_index(np.argmin(tgt_phasemap_mean, axis=None), tgt_phasemap_mean.shape)
+                    maxstd = std_phasemap_mean[indmax]
+                elif values['-combotype-'] == 'Gas/Vapor':
+                    maxval = np.max(tgt_phasemap_mean)
+                    indmax = np.unravel_index(np.argmax(tgt_phasemap_mean, axis=None), tgt_phasemap_mean.shape)
+                    maxstd = std_phasemap_mean[indmax]
+            except:
+                maxval = 0
+                maxstd = 0
+
+            strmax = r'$\phi_{max}=%.3f \pm %.3f$' % (maxval, maxstd)
+
+            if values['-checkstd-'] == False:
+                matrix_plot = tgt_phasemap_mean
+            else:
+                matrix_plot = std_phasemap_mean
+
+        elif values['abelradio'] == True:  # Plot gas density profile from IAT
+            # max abs value and max abs position of phase
+            try:
+                if values['-combotype-'] == 'Plasma':
+                    maxval = np.min(tgt_abelmap_mean)
+                    indmax = np.unravel_index(np.argmin(tgt_abelmap_mean, axis=None), tgt_abelmap_mean.shape)
+                    maxstd = std_abelmap_mean[indmax]
+                elif values['-combotype-'] == 'Gas/Vapor':
+                    maxval = np.max(tgt_abelmap_mean)
+                    indmax = np.unravel_index(np.argmax(tgt_abelmap_mean, axis=None), tgt_abelmap_mean.shape)
+                    maxstd = std_abelmap_mean[indmax]
+            except:
+                maxval = 0
+                maxstd = 0
+
+            strmax = r'$\varphi_{r.max}=%.5f \pm %.5f$' % (maxval, maxstd)
+            if values['-checkstd-'] == False:
+                matrix_plot = tgt_abelmap_mean
+            else:
+                matrix_plot = std_abelmap_mean
+
+        elif values['densradio'] == True:  # Plot gas density profile
+            # max abs value and max abs position of phase
+            try:
+                maxval = np.max(tgt_dens_mean)
+                indmax = np.unravel_index(np.argmax(tgt_dens_mean, axis=None), tgt_dens_mean.shape)
+                maxstd = 100 * std_dens_mean[indmax] / maxval
+            except:
+                maxval = 0
+                maxstd = 0
+            strmax = r'$\rho_{max}=%.2e (\pm %.1f\%%)$' % (maxval, maxstd)
+
+            if values['-checkstd-'] == False:
+                matrix_plot = tgt_dens_mean
+            else:
+                matrix_plot = std_dens_mean
+
+        try:
+            # clearing figures and plots
+            fig_canvas_agg.get_tk_widget().forget()
+            plt.close('all')
+
+            # Instead of plt.show
+            fig, ax1 = plt.subplots(figsize=(6, 5))
+            ########################################################################################################
+            if values['filterradio'] == True or values['fftradio'] == True:
+                ax1.set_xlabel(r'$\nu_x\hspace{.5}(arb.u.)$', fontsize=12)
+                ax1.set_ylabel(r'$\nu_y\hspace{.5}(arb.u.)$', fontsize=12)
+                ax1.imshow(matrix_plot, cmap='gray')
+                if values['fftradio'] == True:
+                    if centerfh != 0:
+                        ax1.axhline(y=centerfh, lw=1, alpha=0.5, color='red')
+                    if centerfv != 0:
+                        ax1.axvline(x=centerfv, lw=1, alpha=0.5, color='red')
+            else:
+                divider = make_axes_locatable(ax1)
+                extentplot = np.shape(matrix_plot)
+                x_max = extentplot[1] * factor * 1e6
+                y_max = extentplot[0] * factor * 1e6
+
+                # X and Y labels
+                if values['-comboaxisymm-'] == 'Horizontal' and values['phaseradio'] == False:
+                    axisext = [0, x_max, -y_max / 2, y_max / 2]
+                    xlabel = r'$x\hspace{.5}(\mu m)$'
+                    ylabel = r'$r\hspace{.5}(\mu m)$'
+                elif values['-comboaxisymm-'] == 'Vertical' and values['phaseradio'] == False:
+                    axisext = [-x_max / 2, x_max / 2, 0, y_max]
+                    xlabel = r'$r\hspace{.5}(\mu m)$'
+                    ylabel = r'$y\hspace{.5}(\mu m)$'
+                else:
+                    axisext = [0, x_max, 0, y_max]
+                    xlabel = r'$x\hspace{.5}(\mu m)$'
+                    ylabel = r'$y\hspace{.5}(\mu m)$'
+
+                cax = divider.append_axes("right", size="5%", pad=0.05)
+                abel_plot = ax1.imshow(matrix_plot, extent=axisext, cmap=newcmp)
+                cb1 = fig.colorbar(abel_plot, cax=cax)
+                ax1.set_xlabel(xlabel, fontsize=12)
+                ax1.set_ylabel(ylabel, fontsize=12)
+                ax1.set_title(strmax, fontsize=10, pad=20)
+
+                if values['phaseradio'] == True:
+                    if values['-checkstd-'] == False:
+                        cb1.set_label(label=r'$\phi\hspace{.5} (rad)$', size=12, weight='bold')
+                    else:
+                        cb1.set_label(label=r'$\sigma_{\phi}\hspace{.5} (rad)$', size=12, weight='bold')
+                    if values['-comboaxisymm-'] == 'Horizontal':
+                        ax1.axhline(y=axis_pos * factor * 1e6, lw=1, ls='--', alpha=0.5, color='black')
+                    elif values['-comboaxisymm-'] == 'Vertical':
+                        ax1.axvline(x=axis_pos * factor * 1e6, lw=1, ls='--', alpha=0.5, color='black')
+
+                elif values['densradio'] == True:
+                    if values['-checkstd-'] == False:
+                        cb1.set_label(label=r'$\rho\hspace{.5} (cm^{-3})$', size=12, weight='bold')
+                    else:
+                        cb1.set_label(label=r'$\sigma_{\rho}\hspace{.5} (cm^{-3})$', size=12, weight='bold')
+
+                elif values['abelradio'] == True:
+                    if values['-checkstd-'] == False:
+                        cb1.set_label(label=r'$\varphi_{r}\hspace{.5} (rad/ \mu m)$', size=12, weight='bold')
+                    else:
+                        cb1.set_label(label=r'$\sigma_{\varphi_{r}}\hspace{.5} (rad/ \mu m)$', size=12, weight='bold')
+            ########################################################################################################
+            fig.tight_layout(pad=2)
+            fig_canvas_agg = draw_figure(window['canvasabel'].TKCanvas, fig)
+
+            visible_f1d = False
+            window['frame1d'].update(visible=False)
+
+            rangeh, rangev = np.shape(matrix_plot)
+
+        except:
+            continue
+
+    #########################################################################
+    # BUTTON DENS.PROFILE 1D AND SLIDER POSITION
+    #########################################################################
+    if event == '1D Profile' or (event == 'sliderh' and visible_f1d == True) or (event == 'fftradio'and visible_f1d == True)\
+        or (event == 'filterradio' and visible_f1d == True) or (event == 'phaseradio' and visible_f1d == True) \
+        or (event == 'abelradio' and visible_f1d == True) or (event == 'densradio' and visible_f1d == True) \
+        or (event == '-checkpos1-' or event == '-checkpos2-' or event == '-checkpos3-' and visible_f1d == True) \
+        or (event == '-checkstd-' and visible_f1d == True) or (event =='-comboaxisprof-' and visible_f1d == True):
+
+
+        if visible_f1d == True:
+            rangeh, rangev = np.shape(matrix_plot)
+            if values['-comboaxisymm-'] == 'Vertical' or values['-comboaxisymm-'] == 'None':
+                window['-comboaxisprof-'].update('Horizontal')
+                window['sliderh'].update(range=(0, rangeh - 1))
+
+            elif values['-comboaxisymm-'] == 'Horizontal':
+                window['-comboaxisprof-'].update('Vertical')
+                window['sliderh'].update(range=(0, rangev - 1))
+        else:
+            visible_f1d = True
+            window['frame1d'].update(visible=True)
+            # 1D PLOTS
+            rangeh, rangev = np.shape(matrix_plot)
+            if values['-comboaxisymm-'] == 'Vertical' or values['-comboaxisymm-'] == 'None':
+                window['-comboaxisprof-'].update('Horizontal')
+                window['sliderh'].update(range=(0, rangeh - 1), value=int(rangeh - indmax[0]))
+
+            elif values['-comboaxisymm-'] == 'Horizontal':
+                window['-comboaxisprof-'].update('Vertical')
+                window['sliderh'].update(range=(0, rangev - 1), value=indmax[1])
+
+        # Cleaning plots
+        try:
+            fig_canvas_agg.get_tk_widget().forget()
+        except:
+            plt.close('all')
+        # set height position
+        h_prof = -1.0
+
+        if values['-checkstd-'] == True:
+            window['-checkpos1-'].update(False)
+            window['-checkpos2-'].update(False)
+            window['-checkpos3-'].update(False)
+        # Plots are building from user select
+        if values['fftradio'] == True:  # Plot FFT map result
+            matrix_plot = fftmap
+            matrix_plot_std = np.zeros(np.shape(matrix_plot))
+            headerfile = 'pixel, R.Int.(arb.u)'
+        elif values['filterradio'] == True:  # Plot gaussian filter map
+            matrix_plot = gfilter
+            matrix_plot_std = np.zeros(np.shape(matrix_plot))
+            headerfile = 'pixel, R.Int.(arb.u)'
+        elif values['phaseradio'] == True:  # Plot phase map result
+            matrix_plot = tgt_phasemap_mean
+            matrix_plot_std = std_phasemap_mean
+            headerfile = '\nPositions(µm), acc. phase(rad)'
+        elif values['abelradio'] == True:  # Plot gas density profile from IAT
+            matrix_plot = tgt_abelmap_mean
+            matrix_plot_std = norm_phasemap
+            headerfile = '\nPositions(µm), radial phase(rad/m)'
+        elif values['densradio'] == True:  # Plot gas density profile
+            headerfile = '\nPosition(µm), density (1/cm³)'
+            matrix_plot = tgt_dens_mean
+            matrix_plot_std = std_dens_mean
+
+        try:
+            # clearing figures and plots
+            fig_canvas_agg.get_tk_widget().forget()
+            plt.close('all')
+
+            if values['filterradio'] == True or values['fftradio'] == True:
+                fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(4.9, 4))
+                ax1.plot(np.arange(0, rangev), summapv, label=r'$\sum_{\nu_{x}} \hspace{.5} ln|\hat{I}|$', lw=2, color="gray")
+                ax2.plot(np.arange(0, rangeh), summaph, label=r'$\sum_{\nu_{y}} \hspace{.5} ln|\hat{I}|$', lw=2, color="gray")
+                ax1.set_xlim(0, rangev)
+                ax2.set_xlim(0, rangeh)
+                if centerfv!=0:
+                    ax1.axvline(x=centerfv + sigma_gfilter, label=r'$\Delta\nu$', lw=1, alpha=0.5, color='red')
+                    ax1.axvline(x=centerfv - sigma_gfilter, lw=1, alpha=0.5, color='red')
+                if centerfh != 0:
+                    ax2.axvline(x=centerfh + sigma_gfilter, label=r'$\Delta\nu$', lw=1, alpha=0.5, color='red')
+                    ax2.axvline(x=centerfh - sigma_gfilter, lw=1, alpha=0.5, color='red')
+
+                if values['filterradio'] == True:
+                    if centerfv != 0:
+                        ax1.scatter(fpv, [summapv[i] for i in fpv], color='red', marker='^', label='$\\nu_x$')
+                        [ax1.text(x, summapv[x], '%d' % x) for x in fpv]
+                        ax1.legend(loc='upper center', fancybox=True, shadow=True)
+                    if centerfh != 0:
+                        ax2.scatter(fph, [summaph[i] for i in fph], color='red', marker='^', label='$\\nu_y$')
+                        [ax2.text(x, summaph[x], '%d' % x) for x in fph]
+                ax1.set_ylabel(r'$Relative\hspace{.5}Intensity\hspace{.5} (arb.u.)$', fontsize=10)
+                ax2.set_ylabel(r'$Relative\hspace{.5}Intensity\hspace{.5} (arb.u.)$', fontsize=10)
+                ax1.set_xlabel(r'$\nu_x\hspace{.5}(arb.u.)$', fontsize=10)
+                ax2.set_xlabel(r'$\nu_y\hspace{.5}(arb.u.)$', fontsize=10)
+                ax2.set_ylim(bottom=0.)
+                ax2.legend(loc='upper center', fancybox=True, shadow=True)
+                ax2.grid(True)
+                ax1.set_ylim(bottom=0.)
+                ax1.legend(loc='upper center', fancybox=True, shadow=True)
+                ax1.grid(True)
+                fig.tight_layout(pad=1)
+
+            else:
+                # create r axis according to symmetry in micrometers (µm)
+                if values['-comboaxisprof-'] == 'Horizontal':
+                    raxis = np.arange(0, rangev, 1)
+                    xlabel = r'$x\hspace{.5}(\mu m)$'
+
+                    if values['-comboaxisymm-'] == 'Vertical':
+                        raxis = np.arange(-rangev / 2, rangev / 2, 1)
+                        xlabel = r'$r\hspace{.5}(\mu m)$'
+
+                    # set origin position (exit nozzle position) and slider position
+                    h_prof = 0
+                    pos_0 = rangeh - 1
+                    pos = pos_0 - int(values['sliderh'])
+                    array_plot = matrix_plot[pos]
+                    array_std = matrix_plot_std[pos]
+
+                    raxis_um = raxis * factor * 1e6  # um
+
+                elif values['-comboaxisprof-'] == 'Vertical':
+                    raxis = np.arange(0, rangeh, 1)
+                    xlabel = r'$x\hspace{.5}(\mu m)$'
+
+                    if values['-comboaxisymm-'] == 'Horizontal':
+                        raxis = np.arange(-rangeh / 2, rangeh / 2, 1)
+                        xlabel = r'$r\hspace{.5}(\mu m)$'
+
+                    # set origin position (exit nozzle position) and slider position
+                    h_prof = 0
+                    pos_0 = 0
+                    pos = int(values['sliderh'])
+                    array_plot = matrix_plot[:, pos]
+                    array_std = matrix_plot_std[:, pos]
+
+                    raxis_um = raxis * factor * 1e6  # um
+
+
+                # convert vertical array positions to height positions in µm
+                h_prof = int(values['sliderh']) * factor * 1e6
+
+                h_prof1 = int(get_value('-pos1-', values))
+                pos1 = int(h_prof1 / (factor * 1e6))
+                h_prof2 = int(get_value('-pos2-', values))
+                pos2 = int(h_prof2 / (factor * 1e6))
+                h_prof3 = int(get_value('-pos3-', values))
+                pos3 = int(h_prof3 / (factor * 1e6))
+
+                # Creating plot parameters
+                fig, ax1 = plt.subplots(figsize=(6, 5))
+
+                ax1.set_xlabel(xlabel, fontsize=12)
+
+                if values['densradio'] == True:
+
+                    labelplot = r'$%d \hspace{.5}\mu m$'
+                    ax1.plot(raxis_um, array_plot, label=labelplot % h_prof, lw=2, color="blue")
+                    ax1.set_ylabel(r'$\rho\hspace{.5} (cm^{-3})$', fontsize=12)
+                    strmax = r'$\rho_{max}=%.2e (\pm %.1f\%%)$' % (np.max(array_plot), 100 * array_std[np.argmax(array_plot)] / np.max(array_plot))
+                    ax1.set_title(strmax, fontsize = 10)
+
+                    try:
+                        FWHM, yFWHM, x1, x2 = peak_widths(np.abs(array_plot), [np.argmax(array_plot)], rel_height=0.5)
+                        ax1.hlines(yFWHM, raxis_um[int(x1[0])], raxis_um[int(x2[0])], label=r'%.1f $\mu m (FWHM)$' % (FWHM[0] * factor * 1e6), lw=1, color="black")
+                    except:
+                        continue
+
+                    if values['-checkstd-'] == True:
+                        ax1.errorbar(raxis_um, array_plot, yerr=array_std, label=r'$\sigma_{\rho}$', alpha=0.2,
+                                     color="blue")
+                        ax1.set_ylim(bottom=0.)
+
+                if values['abelradio'] == True:
+                    labelplot = r'$%d \hspace{.5}\mu m$'
+                    ax1.plot(raxis_um, array_plot, label=labelplot % h_prof, lw=2, color="blue")
+                    ax1.set_ylabel(r'$\varphi_{r}\hspace{.5} (rad/ \mu m)$', fontsize=12)
+                    if values['-checkstd-'] == True:
+                        ax1.plot(raxis_um, array_std, '--', label=r'$(\phi_{norm})_{%d \hspace{.5}\mu m}$' % h_prof,
+                                 lw=2, color="red")
+                        ax1.fill_between(raxis_um, array_plot, array_std, color="orange", alpha=0.5,
+                                         label=r'$(\sigma_{Abel})_{%d}$' % h_prof)
+                        #ax1.errorbar(raxis_um, array_plot, yerr=array_std, label='$\sigma_{\Delta\phi}$', alpha=0.2,
+                                    #color="blue")
+
+                if values['phaseradio'] == True:
+                    labelplot = r'$%d \hspace{.5}\mu m$'
+                    ax1.plot(raxis_um, array_plot, label=labelplot % h_prof, lw=2, color="blue")
+                    ax1.set_ylabel(r'$\phi\hspace{.5} (rad)$', fontsize=12)
+                    if values['-checkstd-'] == True:
+                        ax1.errorbar(raxis_um, array_plot, yerr=array_std, label= r'$\sigma_{\phi}$', alpha=0.2,
+                                     color="blue")
+
+                # Including new 1D density profile for another height from origin height position
+                if values['-checkpos1-'] == True and values['-checkstd-'] == False:
+                    h_prof1 = int(get_value('-pos1-', values))
+                    pos1 = int(h_prof1 / (factor * 1e6))
+                    if values['-comboaxisprof-'] == 'Horizontal':
+                        ax1.plot(raxis_um, matrix_plot[pos_0 - pos1], label=labelplot % (h_prof1), lw=1,
+                                 color="purple")
+                    elif values['-comboaxisprof-'] == 'Vertical':
+                        ax1.plot(raxis_um, matrix_plot[:, pos1], label=labelplot % (h_prof1), lw=1,
+                                 color="purple")
+
+                if values['-checkpos2-'] == True and values['-checkstd-'] == False:
+                    h_prof2 = int(get_value('-pos2-', values))
+                    pos2 = int(h_prof2 / (factor * 1e6))
+                    if values['-comboaxisprof-'] == 'Horizontal' :
+                        ax1.plot(raxis_um, matrix_plot[pos_0 - pos2], label=labelplot % (h_prof2), lw=1,
+                                 color="red")
+                    elif values['-comboaxisprof-'] == 'Vertical' :
+                        ax1.plot(raxis_um, matrix_plot[:, pos2], label=labelplot % h_prof2, lw=1,
+                                 color="red")
+
+                if values['-checkpos3-'] == True and values['-checkstd-'] == False:
+                    h_prof3 = int(get_value('-pos3-', values))
+                    pos3 = int(h_prof3 / (factor * 1e6))
+                    if values['-comboaxisprof-'] == 'Horizontal':
+                        ax1.plot(raxis_um, matrix_plot[pos_0 - pos3], label=labelplot % (h_prof3), lw=1,
+                                 color="orange")
+                    elif values['-comboaxisprof-'] == 'Vertical':
+                        ax1.plot(raxis_um, matrix_plot[:, pos3], label=labelplot % h_prof3, lw=1,
+                                 color="orange")
+                ax1.legend()
+                ax1.grid(True)
+                fig.tight_layout(pad=2)
+            #############################################################################################################
+
+            fig_canvas_agg = draw_figure(window['canvasabel'].TKCanvas, fig)
+            visible_f1d = True
+            window['frame1d'].update(visible=visible_f1d)
+        except:
+            continue
+    #########################################################################
+    # SAVING RESULTS
+    #########################################################################
+    #  BUTTON SAVEPLOT
+    elif event == 'Save Image':
+        save_filename_plot = sg.popup_get_file('File',
+                                               file_types=[("PNG (*.png)", "*.png"), ("All files (*.*)", "*.*")],
+                                               save_as=True, no_window=True)
+        if save_filename_plot:
+            # save the plot
+            plt.savefig(save_filename_plot)
+            sg.popup(f"Saved: {save_filename_plot}")
+
+    ########################################################################
+    #  BUTTON SAVE DATA
+    ########################################################################
+    elif event == 'Save Data':
+        save_filename_data = sg.popup_get_file('File',
+                                               file_types=[("DAT (*.dat)", "*.dat"), ("TXT (*.txt)", "*.txt")],
+                                               save_as=True, no_window=True)
+
+        if save_filename_data:
+            file_data = open(save_filename_data, 'a')
+            file_data.seek(0)  # sets  point at the beginning of the file
+            file_data.truncate()
+            ########################################################################
+            # Saving 1D plots
+            if visible_f1d == True:
+                # save data plot
+                file_data.write(headerfile)
+                if (values['filterradio'] == True or values['fftradio'] == True):
+                        file_data.write('Horizontal FFT / Vertical FFT\n')
+                        listmaph = summaph
+                        listmapv = summapv
+
+                        if len(summaph) < len(summapv):
+                            listmaph = np.hstack(summaph, np.zeros((len(summapv)-len(summaph))))
+
+                        elif len(summaph) > len(summapv):
+                            listmapv = np.hstack(summapv, np.zeros((len(summaph) - len(summapv))))
+
+                        list_datah = np.vstack((np.arange(0, len(listmaph), 1), listmaph))
+                        list_datav = np.vstack((np.arange(0, len(listmapv), 1), listmapv))
+                        list_data = np.vstack(list_datah, list_datah)
+
+                if h_prof >= 0.0 and (
+                        values['phaseradio'] == True or values['abelradio'] == True or values['densradio'] == True):
+                    file_data.write(',for height(s) on axisymmetric of %.0f (µm)' % h_prof)
+                    list_data = np.vstack((raxis_um, array_plot))
+
+                    if values['-checkstd-'] == True:
+                        file_data.write('with standard deviation')
+                        list_data = np.vstack((list_data, array_std))
+                    # verify additional height positions 1, 2 and 3
+                    else:
+                        if values['-checkpos1-'] == True:
+                            if values['-comboaxisprof-'] == 'Vertical' :
+                                list_data = np.vstack((list_data, matrix_plot[pos_0 - pos1]))
+                            else:
+                                list_data = np.vstack((list_data, matrix_plot[:, pos1]))
+                            file_data.write(',%.0f (µm)' % h_prof1)
+
+                        if values['-checkpos2-'] == True:
+                            if values['-comboaxisprof-'] == 'Vertical':
+                                list_data = np.vstack((list_data, matrix_plot[pos_0 - pos2]))
+                            else:
+                                list_data = np.vstack((list_data, matrix_plot[:, pos2]))
+                            file_data.write(',%.0f (µm)' % h_prof2)
+
+                        if values['-checkpos3-'] == True:
+                            if values['-comboaxisprof-'] == 'Vertical':
+                                list_data = np.vstack((list_data, matrix_plot[pos_0 - pos3]))
+                            else:
+                                list_data = np.vstack((list_data, matrix_plot[:, pos3]))
+                            file_data.write(',%.0f (µm)' % h_prof3)
+
+                file_data.write('\n')
+                list_str = (np.transpose(list_data))
+                np.savetxt(file_data, list_str, fmt='%.2e', delimiter=',')
+                file_data.close()
+            ########################################################################
+            # Save 2D array
+            else:
+                np.savetxt(file_data, matrix_plot, fmt='%.3e', delimiter=',')
+
+
+                sg.popup(f"Saved: {save_filename_data}")
+                file_data.close()
+        else:
+            continue
+
+window.close()
+########################################################################################
